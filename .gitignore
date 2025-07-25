@@ -1,0 +1,127 @@
+# Claude Code local settings
+.claude/settings.local.json
+.claude/logs/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Dependencies
+node_modules/
+vendor/
+venv/
+env/
+.env
+.env.local
+.env.*.local
+
+# Build outputs
+dist/
+build/
+out/
+target/
+*.o
+*.so
+*.dll
+*.exe
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Test coverage
+coverage/
+.coverage
+*.cover
+.hypothesis/
+.pytest_cache/
+htmlcov/
+
+# Package files
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+
+# OS files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.Python
+
+# Ruby
+*.gem
+.bundle/
+.ruby-version
+.ruby-gemset
+
+# Go
+*.test
+*.out
+go.sum
+
+# Rust
+Cargo.lock
+**/*.rs.bk
+
+# Java
+*.class
+.gradle/
+.m2/
+
+# JavaScript/TypeScript
+.npm/
+.yarn/
+.pnp.*
+.next/
+.nuxt/
+.cache/
+.parcel-cache/
+
+# Documentation build
+docs/_build/
+site/
+
+# Secrets and credentials
+*.pem
+*.key
+*.crt
+*.p12
+.npmrc
+.yarnrc

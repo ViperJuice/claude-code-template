@@ -1,0 +1,62 @@
+name: Claude Code CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate-claude-config:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Validate Claude settings.json
+      run: |
+        if [ -f ".claude/settings.json" ]; then
+          python -m json.tool .claude/settings.json > /dev/null
+          echo "✅ settings.json is valid JSON"
+        else
+          echo "❌ .claude/settings.json not found"
+          exit 1
+        fi
+    
+    - name: Check CLAUDE.md exists
+      run: |
+        if [ -f "CLAUDE.md" ]; then
+          echo "✅ CLAUDE.md exists"
+        else
+          echo "❌ CLAUDE.md not found"
+          exit 1
+        fi
+    
+    - name: Validate slash commands
+      run: |
+        for cmd in .claude/commands/*.md; do
+          if [ -f "$cmd" ]; then
+            echo "✅ Found command: $(basename $cmd)"
+          fi
+        done
+    
+    - name: Check hook permissions
+      run: |
+        for hook in .claude/hooks/*.sh; do
+          if [ -f "$hook" ]; then
+            if [ -x "$hook" ]; then
+              echo "✅ Hook is executable: $(basename $hook)"
+            else
+              echo "❌ Hook not executable: $(basename $hook)"
+              exit 1
+            fi
+          fi
+        done
+
+  # Add your project-specific CI steps here
+  # test:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - uses: actions/checkout@v3
+  #   - name: Run tests
+  #     run: npm test
