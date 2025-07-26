@@ -1,0 +1,46 @@
+{
+  "description": "User-level Claude Code settings",
+  "permissions": {
+    "allow": [
+      "Read(*)",
+      "Write(*)",
+      "Edit(*)",
+      "MultiEdit(*)",
+      "Bash(*)",
+      "Grep(*)",
+      "Glob(*)",
+      "WebSearch(*)",
+      "WebFetch(*)"
+    ],
+    "deny": [
+      "Bash(rm -rf /)",
+      "Bash(rm -rf ~)",
+      "Bash(sudo rm -rf *)"
+    ]
+  },
+  "preferences": {
+    "code_style": {
+      "indent_style": "space",
+      "indent_size": 2,
+      "max_line_length": 100,
+      "quote_style": "single"
+    },
+    "git": {
+      "commit_style": "conventional",
+      "branch_prefix": {
+        "feature": "feature/",
+        "bugfix": "fix/",
+        "hotfix": "hotfix/",
+        "release": "release/"
+      }
+    },
+    "testing": {
+      "auto_run_tests": false,
+      "coverage_threshold": 80
+    }
+  },
+  "global_hooks": {
+    "pre_commit": ".claude/hooks/pre_commit.sh",
+    "post_file_edit": ".claude/hooks/post_file_edit.sh"
+  }
+}

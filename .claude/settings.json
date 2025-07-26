@@ -1,5 +1,4 @@
 {
-  "description": "Claude Code project settings",
   "permissions": {
     "allow": [
       "Read(*)",
@@ -10,24 +9,32 @@
       "Grep(*)",
       "Glob(*)",
       "WebSearch(*)",
-      "WebFetch(*)"
+      "WebFetch(*)",
+      "NotebookRead(*)",
+      "NotebookEdit(*)",
+      "LS(*)",
+      "TodoWrite(*)",
+      "Task(*)"
     ],
     "deny": [
       "Bash(rm -rf /)",
       "Bash(rm -rf ~)",
       "Bash(sudo rm -rf *)"
-    ]
+    ],
+    "additionalDirectories": []
   },
   "hooks": {
-    "pre_tool_use": ".claude/hooks/pre_tool_use.sh",
-    "post_tool_use": ".claude/hooks/post_tool_use.sh"
+    "PreToolUse": {
+      "Bash": ".claude/hooks/pre_tool_use.sh"
+    },
+    "PostToolUse": {
+      "Bash": ".claude/hooks/post_tool_use.sh"
+    }
   },
-  "project": {
-    "type": "template",
-    "language": "multi",
-    "framework": "none",
-    "test_command": "echo 'Configure test command in settings.json'",
-    "lint_command": "echo 'Configure lint command in settings.json'",
-    "build_command": "echo 'Configure build command in settings.json'"
-  }
+  "env": {
+    "CLAUDE_CODE_PROJECT_TYPE": "template"
+  },
+  "cleanupPeriodDays": 30,
+  "includeCoAuthoredBy": true,
+  "enableAllProjectMcpServers": false
 }
