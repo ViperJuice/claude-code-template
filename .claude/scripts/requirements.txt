@@ -1,0 +1,19 @@
+# Claude Code Setup Tools Dependencies
+
+# CLI framework for beautiful command-line interfaces
+click>=8.0.0
+
+# Rich terminal formatting and progress bars
+rich>=13.0.0
+
+# YAML parsing for configuration and templates
+pyyaml>=6.0
+
+# Type hints backport for older Python versions
+typing-extensions>=4.0.0
+
+# JSON schema validation
+jsonschema>=4.0.0
+
+# Path handling utilities (built-in for Python 3.4+, but included for compatibility)
+pathlib2>=2.3.0; python_version < '3.4'

@@ -94,10 +94,8 @@ __pycache__/
 # Go
 *.test
 *.out
-go.sum
 
 # Rust
-Cargo.lock
 **/*.rs.bk
 
 # Java

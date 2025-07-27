@@ -1,0 +1,136 @@
+﻿version: '3.8'
+
+services:
+  # Rust service
+  rust-service:
+    build:
+      context: ./rust-components
+      dockerfile: Dockerfile.rust
+    volumes:
+      - ./rust-components:/workspace
+      - rust-cache:/usr/local/cargo/registry
+    environment:
+      - RUST_BACKTRACE=1
+    networks:
+      - app-network
+
+  # C/C++ service
+  cpp-service:
+    build:
+      context: ./cpp-components
+      dockerfile: Dockerfile.cpp
+    volumes:
+      - ./cpp-components:/workspace
+      - build-cache:/workspace/build
+    networks:
+      - app-network
+
+  # Go service
+  go-service:
+    build:
+      context: ./go-components
+      dockerfile: Dockerfile.go
+    volumes:
+      - ./go-components:/workspace
+      - go-cache:/go/pkg/mod
+    environment:
+      - GO111MODULE=on
+    networks:
+      - app-network
+
+  # Node.js/TypeScript service
+  node-service:
+    build:
+      context: ./node-components
+      dockerfile: Dockerfile.node
+    volumes:
+      - ./node-components:/workspace
+      - node-cache:/workspace/node_modules
+    networks:
+      - app-network
+
+  # Dart service
+  dart-service:
+    build:
+      context: ./dart-components
+      dockerfile: Dockerfile.dart
+    volumes:
+      - ./dart-components:/workspace
+      - dart-cache:/root/.pub-cache
+    networks:
+      - app-network
+
+  # Development database (PostgreSQL)
+  postgres:
+    image: postgres:16
+    environment:
+      - POSTGRES_DB=devdb
+      - POSTGRES_USER=devuser
+      - POSTGRES_PASSWORD=devpass
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - app-network
+
+  # Redis for caching
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - app-network
+
+  # Message broker (RabbitMQ)
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=admin
+    networks:
+      - app-network
+
+volumes:
+  rust-cache:
+  build-cache:
+  go-cache:
+  node-cache:
+  dart-cache:
+  postgres-data:
+
+networks:
+  app-network:
+    driver: bridge
+
+# Dockerfile examples (create these in your project)
+# Dockerfile.rust:
+# FROM rust:1.75
+# WORKDIR /workspace
+# RUN cargo install cargo-watch
+# CMD ["cargo", "watch", "-x", "run"]
+
+# Dockerfile.cpp:
+# FROM gcc:13
+# RUN apt-get update && apt-get install -y cmake clang-format
+# WORKDIR /workspace
+# CMD ["bash"]
+
+# Dockerfile.go:
+# FROM golang:1.21
+# WORKDIR /workspace
+# RUN go install github.com/cosmtrek/air@latest
+# CMD ["air"]
+
+# Dockerfile.node:
+# FROM node:20
+# WORKDIR /workspace
+# CMD ["npm", "run", "dev"]
+
+# Dockerfile.dart:
+# FROM dart:stable
+# WORKDIR /workspace
+# CMD ["dart", "run", "--enable-vm-service"]

@@ -1,151 +1,195 @@
-# Claude Code Template
+# Claude Code Multi-Language Project Template
 
-A comprehensive GitHub template for Claude Code projects with standardized directory structure, configurations, and best practices.
+[![Claude Code Compatible](https://img.shields.io/badge/Claude%20Code-Compatible-blue)](https://docs.anthropic.com/en/docs/claude-code/)
+[![Languages](https://img.shields.io/badge/Languages-25%2B-green)](docs/languages.md)
+[![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 
-## 🚀 Quick Start
+This template provides a complete Claude Code setup with native sub-agents for orchestrating parallel development across 25+ programming languages with zero merge conflicts.
 
-### Using this Template
+## Features
 
-1. Click the "Use this template" button on GitHub
-2. Create a new repository from this template
-3. Clone your new repository:
-   ```bash
-   git clone https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
-   cd YOUR_REPO_NAME
-   ```
-4. Customize the `CLAUDE.md` file with your project specifics
-5. Update `.claude/settings.json` with your project's commands
+- **9 Specialized AI Sub-Agents**: Each handles a specific aspect of development
+- **25+ Language Support**: From systems languages (C/C++/Rust) to modern web (TypeScript/Go)
+- **Zero Merge Conflicts**: Git work tree isolation ensures parallel development
+- **TDD Enforcement**: Tests are written before implementation
+- **Automated Documentation**: Keeps docs in sync with code
+- **CI/CD Ready**: GitHub Actions workflow included
 
-## 📁 Project Structure
+## Project Structure
 
-```
-.
-├── .claude/                    # Claude Code configuration directory
-│   ├── commands/              # Custom slash commands
-│   │   ├── start.md          # Initialize project
-│   │   ├── commit.md         # Create structured commits
-│   │   ├── review.md         # Perform code review
-│   │   └── test.md           # Run tests
-│   ├── agents/               # Custom sub-agents
-│   ├── hooks/                # Pre/post execution hooks
-│   │   ├── pre_tool_use.sh   # Run before tool execution
-│   │   └── post_tool_use.sh  # Run after tool execution
-│   ├── settings.json         # Project settings and permissions
-│   └── settings.local.json   # Local overrides (gitignored)
-├── .github/                   # GitHub specific files
-│   ├── ISSUE_TEMPLATE/       # Issue templates
-│   └── workflows/            # GitHub Actions
-├── CLAUDE.md                 # Project context for Claude
-├── README.md                 # This file
-├── .gitignore               # Git ignore rules
-└── LICENSE                  # Project license
-```
-
-## 🔧 Configuration
-
-### `.claude/settings.json`
-
-The main configuration file for Claude Code. Customize it with:
-
-- **Permissions**: Control which tools Claude can use
-- **Hooks**: Define pre/post execution scripts
-- **Project Settings**: Configure build, test, and lint commands
-
-Example:
-```json
-{
-  "project": {
-    "type": "webapp",
-    "language": "typescript",
-    "framework": "react",
-    "test_command": "npm test",
-    "lint_command": "npm run lint",
-    "build_command": "npm run build"
-  }
-}
-```
-
-### `CLAUDE.md`
-
-This file provides context to Claude about your project. Update it with:
-- Project overview and architecture
-- Development setup instructions
-- Coding standards and conventions
-- Key commands and workflows
-- Troubleshooting guides
-
-## 📝 Custom Slash Commands
-
-Create custom commands in `.claude/commands/`:
-
-### `/start`
-Initializes the project with dependencies and initial setup.
-
-### `/commit`
-Creates well-structured git commits following your project's conventions.
-
-### `/review`
-Performs a code review on recent changes.
-
-### `/test`
-Runs the project's test suite.
-
-### Creating New Commands
-
-1. Create a new `.md` file in `.claude/commands/`
-2. Write the command instructions in markdown
-3. Use the command with `/command-name` in Claude Code
-
-## 🪝 Hooks
-
-Hooks allow you to run scripts before or after Claude uses tools:
-
-- **Pre-tool hooks**: Validate actions, check permissions
-- **Post-tool hooks**: Log actions, notify team members
-
-Example pre-tool hook:
 ```bash
-#!/bin/bash
-# .claude/hooks/pre_tool_use.sh
-if [[ "$CLAUDE_TOOL" == "Bash" && "$CLAUDE_COMMAND" =~ "rm -rf" ]]; then
-    echo "Dangerous command blocked"
-    exit 1
-fi
+.claude/
+├── agents/           # AI sub-agents for orchestration
+├── commands/         # Slash commands (/phase-breakdown)
+├── scripts/          # Helper scripts
+├── state/            # Runtime state (git-ignored)
+└── config.json       # Multi-language configuration
+
+worktrees/           # Isolated development branches
+docs/                # Project documentation
+tests/               # Integration tests
+specs/               # Project specifications (ROADMAP.md)
 ```
 
-## 🤝 Team Collaboration
+## Quick Start
 
-### Shared Settings
-- Commit `.claude/settings.json` for team-wide settings
-- Use `.claude/settings.local.json` for personal overrides
+1. **Clone this template**
 
-### Best Practices
-1. Keep `CLAUDE.md` up to date with project changes
-2. Document custom commands thoroughly
-3. Use hooks for team-specific workflows
-4. Review and update permissions regularly
+   ```bash
+   git clone https://github.com/ViperJuice/claude-code-template my-project
+   cd my-project
+   ```
 
-## 🔒 Security
+2. **Initialize the template**
 
-- Never commit sensitive data to `.claude/settings.json`
-- Use environment variables for secrets
-- Review hook scripts for security implications
-- Limit permissions to necessary tools only
+   ```bash
+   # Quick setup
+   ./scripts/setup.sh
+   
+   # Or manual setup
+   pip install -r .claude/scripts/requirements.txt
+   ./scripts/validate.sh
+   ```
 
-## 📚 Resources
+3. **Try example projects**
 
-- [Claude Code Documentation](https://docs.anthropic.com/en/docs/claude-code)
-- [Claude Code GitHub](https://github.com/anthropics/claude-code)
-- [Report Issues](https://github.com/anthropics/claude-code/issues)
+   ```bash
+   # Run all examples
+   ./scripts/run-examples.sh
+   
+   # Run specific example
+   ./scripts/run-examples.sh python-ml-typescript-api
+   ```
 
-## 📄 License
+4. **Create your roadmap**
 
-This template is provided under the MIT License. See [LICENSE](LICENSE) file for details.
+   ```bash
+   # Copy an example as starting point
+   cp examples/rust-go-microservices my-project
+   cd my-project
+   
+   # Edit specs/ROADMAP.md with your phase definitions
+   ```
+
+5. **Start development**
+
+   ```bash
+   claude
+   /phase-breakdown 1
+   ```
+
+## Sub-Agents
+
+| Agent | Purpose |
+|-------|---------|
+| **phase-architect** | Master orchestrator, analyzes roadmap and coordinates execution |
+| **interface-designer** | Creates language-agnostic interfaces and boundaries |
+| **interface-verifier** | Validates interfaces compile and have no circular dependencies |
+| **worktree-manager** | Sets up isolated Git work trees for parallel development |
+| **worktree-lead** | Manages implementation of a single component |
+| **test-builder** | Creates comprehensive test suites (TDD red phase) |
+| **coder** | Implements features to pass tests (TDD green phase) |
+| **integration-guardian** | Manages PR merges and ensures quality gates |
+| **doc-scribe** | Updates documentation after features are merged |
+
+## Supported Languages
+
+### Systems Programming
+
+C, C++, Rust, Zig, Assembly (x86, ARM)
+
+### Enterprise
+
+Java, C#, Go, Kotlin, Scala
+
+### Web Development
+
+TypeScript, JavaScript, Dart, PHP, Ruby
+
+### Data Science & ML
+
+Python, R, Julia, MATLAB
+
+### Functional
+
+Haskell, Elixir, Erlang, F#, OCaml, Clojure
+
+### Mobile
+
+Swift, Kotlin, Dart (Flutter)
+
+### Emerging
+
+Mojo, Carbon, V
+
+## Example Workflow
+
+### Phase 1: Define Your Project
+
+Create a `ROADMAP.md` in the `specs/` directory:
+
+```markdown
+## Phase 1: Core Services
+- **payment-service** (Rust) - High-performance payment processing
+- **order-service** (Go) - Concurrent order management
+- **analytics** (Python) - ML-powered insights
+```
+
+### Phase 2: Execute
+
+```bash
+claude
+/phase-breakdown 1
+```
+
+### Phase 3: Watch the Magic
+
+- Interfaces are automatically created
+- Work trees are set up for each service
+- Tests are written first (TDD)
+- Implementation happens in parallel
+- PRs are created and merged automatically
+- Documentation is updated
+
+## Configuration
+
+Edit `.claude/config.json` to customize:
+
+- Language preferences
+- Test coverage thresholds
+- Build commands
+- Linting rules
+
+## CI/CD
+
+Includes GitHub Actions workflow that:
+
+- Detects all languages automatically
+- Runs language-specific tests
+- Generates coverage reports
+- Builds Docker images
+- Runs integration tests
+
+## Documentation
+
+- [Implementation Guide](docs/implementation-guide.md)
+- [Language Support Matrix](docs/languages.md)
+- [Architecture Overview](docs/architecture/README.md)
+- [API Reference](docs/api/README.md)
+- [Helper Scripts](docs/helpers.md)
+
+## Contributing
+
+Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) first.
+
+## License
+
+MIT License - see [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+Built for use with [Claude Code](https://docs.anthropic.com/en/docs/claude-code/) by Anthropic.
 
 ---
 
-## Getting Help
-
-- Use `/help` in Claude Code for built-in help
-- Check the [troubleshooting guide](https://docs.anthropic.com/en/docs/claude-code/troubleshooting)
-- Report issues at the [Claude Code repository](https://github.com/anthropics/claude-code/issues)
+**Ready to build something amazing?** Start with `/phase-breakdown 1` and let Claude orchestrate your development!

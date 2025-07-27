@@ -15,7 +15,7 @@ Example use cases for hooks include:
 
 * **Notifications**: Customize how you get notified when Claude Code is awaiting
   your input or permission to run something.
-* **Automatic formatting**: Run `prettier` on .ts files, `gofmt` on .go files,
+* **Automatic formatting**: Run `prettier` on TypeScript files, `gofmt` on .go files,
   etc. after every file edit.
 * **Logging**: Track and count all executed commands for compliance or
   debugging.
@@ -48,9 +48,9 @@ workflow:
 Each event receives different data and can control Claude's behavior in
 different ways.
 
-## Quickstart
+## Quick Start
 
-In this quickstart, you'll add a hook that logs the shell commands that Claude
+In this quick start, you'll add a hook that logs the shell commands that Claude
 Code runs.
 
 ### Prerequisites

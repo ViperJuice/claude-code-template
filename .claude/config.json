@@ -1,0 +1,184 @@
+{
+  "project": {
+    "name": "my-project",
+    "description": "Multi-language project using Claude Code agents",
+    "languages": ["auto-detect"],
+    "defaultBranch": "main"
+  },
+  "phases": {
+    "parallelExecution": true,
+    "autoMerge": false,
+    "requireCodeReview": true,
+    "minTestCoverage": 80,
+    "integrationTests": true
+  },
+  "agents": {
+    "timeout": 300,
+    "retryOnFailure": true,
+    "maxRetries": 2
+  },
+  "languages": {
+    "c": {
+      "extensions": [".c", ".h"],
+      "testCommand": "make test",
+      "buildCommand": "make",
+      "lintCommand": "clang-tidy",
+      "coverageCommand": "gcov"
+    },
+    "cpp": {
+      "extensions": [".cpp", ".cc", ".hpp", ".h"],
+      "testCommand": "ctest --output-on-failure",
+      "buildCommand": "cmake --build .",
+      "lintCommand": "clang-tidy",
+      "coverageCommand": "lcov"
+    },
+    "rust": {
+      "extensions": [".rs"],
+      "testCommand": "cargo test",
+      "buildCommand": "cargo build --release",
+      "lintCommand": "cargo clippy -- -D warnings",
+      "coverageCommand": "cargo tarpaulin"
+    },
+    "go": {
+      "extensions": [".go"],
+      "testCommand": "go test ./...",
+      "buildCommand": "go build ./...",
+      "lintCommand": "golangci-lint run",
+      "coverageCommand": "go test -cover ./..."
+    },
+    "python": {
+      "extensions": [".py"],
+      "testCommand": "pytest",
+      "buildCommand": "python -m py_compile",
+      "lintCommand": "pylint --errors-only",
+      "coverageCommand": "pytest --cov"
+    },
+    "typescript": {
+      "extensions": [".ts", ".tsx"],
+      "testCommand": "npm test",
+      "buildCommand": "npm run build",
+      "lintCommand": "npm run lint",
+      "coverageCommand": "npm run coverage"
+    },
+    "javascript": {
+      "extensions": [".js", ".jsx"],
+      "testCommand": "npm test",
+      "buildCommand": "npm run build",
+      "lintCommand": "npm run lint",
+      "coverageCommand": "npm run coverage"
+    },
+    "java": {
+      "extensions": [".java"],
+      "testCommand": "mvn test",
+      "buildCommand": "mvn package",
+      "lintCommand": "mvn checkstyle:check",
+      "coverageCommand": "mvn jacoco:report"
+    },
+    "csharp": {
+      "extensions": [".cs"],
+      "testCommand": "dotnet test",
+      "buildCommand": "dotnet build",
+      "lintCommand": "dotnet format --verify-no-changes",
+      "coverageCommand": "dotnet test --collect:\"XPlat Code Coverage\""
+    },
+    "dart": {
+      "extensions": [".dart"],
+      "testCommand": "dart test",
+      "buildCommand": "dart compile exe",
+      "lintCommand": "dart analyze",
+      "coverageCommand": "dart run coverage:test_with_coverage"
+    },
+    "ruby": {
+      "extensions": [".rb"],
+      "testCommand": "bundle exec rspec",
+      "buildCommand": "bundle install",
+      "lintCommand": "rubocop",
+      "coverageCommand": "bundle exec rspec --format RspecJunitFormatter"
+    },
+    "php": {
+      "extensions": [".php"],
+      "testCommand": "phpunit",
+      "buildCommand": "composer install",
+      "lintCommand": "phpcs",
+      "coverageCommand": "phpunit --coverage-html coverage"
+    },
+    "swift": {
+      "extensions": [".swift"],
+      "testCommand": "swift test",
+      "buildCommand": "swift build",
+      "lintCommand": "swiftlint",
+      "coverageCommand": "swift test --enable-code-coverage"
+    },
+    "kotlin": {
+      "extensions": [".kt"],
+      "testCommand": "gradle test",
+      "buildCommand": "gradle build",
+      "lintCommand": "ktlint",
+      "coverageCommand": "gradle jacocoTestReport"
+    },
+    "mojo": {
+      "extensions": [".mojo", ".=%"],
+      "testCommand": "mojo test",
+      "buildCommand": "mojo build",
+      "lintCommand": "mojo format --check",
+      "coverageCommand": "mojo test --coverage"
+    },
+    "assembly": {
+      "extensions": [".asm", ".s"],
+      "testCommand": "make test",
+      "buildCommand": "make",
+      "lintCommand": "echo 'No linter for assembly'",
+      "coverageCommand": "echo 'No coverage for assembly'"
+    },
+    "elixir": {
+      "extensions": [".ex", ".exs"],
+      "testCommand": "mix test",
+      "buildCommand": "mix compile",
+      "lintCommand": "mix credo",
+      "coverageCommand": "mix test --cover"
+    },
+    "haskell": {
+      "extensions": [".hs"],
+      "testCommand": "stack test",
+      "buildCommand": "stack build",
+      "lintCommand": "hlint",
+      "coverageCommand": "stack test --coverage"
+    },
+    "scala": {
+      "extensions": [".scala"],
+      "testCommand": "sbt test",
+      "buildCommand": "sbt compile",
+      "lintCommand": "sbt scalafmtCheck",
+      "coverageCommand": "sbt coverage test"
+    },
+    "zig": {
+      "extensions": [".zig"],
+      "testCommand": "zig test",
+      "buildCommand": "zig build",
+      "lintCommand": "zig fmt --check",
+      "coverageCommand": "zig test --test-cmd 'kcov'"
+    }
+  },
+  "worktrees": {
+    "cleanupOnMerge": true,
+    "branchPrefix": "feature/phase-",
+    "isolateNodeModules": true,
+    "isolateVirtualEnvs": true
+  },
+  "testing": {
+    "runBeforeMerge": true,
+    "integrationTests": true,
+    "coverageThreshold": {
+      "statements": 80,
+      "branches": 70,
+      "functions": 80,
+      "lines": 80
+    }
+  },
+  "github": {
+    "autoCreatePR": true,
+    "prTemplate": true,
+    "requireApprovals": 0,
+    "deletebranchOnMerge": true
+  }
+}

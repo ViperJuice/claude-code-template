@@ -1,35 +1,158 @@
 {
   "permissions": {
     "allow": [
+      "Bash(python:*)",
+      "Bash(uv:*)",
+      "Bash(git:*)",
+      "Bash(git worktree:*)",
+      "Bash(git branch:*)",
+      "Bash(git status:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git merge:*)",
+      "Bash(cd worktrees/*)",
+      "Bash(ls worktrees/*)",
+      "Bash(mkdir worktrees/*)",
+      "Edit(worktrees/**)",
+      "Read(worktrees/**)",
+      "Bash(if:*)",
+      "Bash(for:*)",
+      "Bash(test:*)",
+      "Bash(pytest:*)",
+      "Bash(ruff:*)",
+      "Bash(mypy:*)",
+      "Bash(npm:*)",
+      "Bash(node:*)",
+      "Bash(pip:*)",
+      "Bash(cd:*)",
+      "Bash(ls:*)",
+      "Bash(pwd)",
+      "Bash(mkdir:*)",
+      "Bash(cat:*)",
+      "Bash(echo:*)",
+      "Bash(chmod:*)",
+      "Bash(which:*)",
+      "Bash(find:*)",
       "Read(*)",
       "Write(*)",
       "Edit(*)",
       "MultiEdit(*)",
-      "Bash(*)",
-      "Grep(*)",
       "Glob(*)",
-      "WebSearch(*)",
-      "WebFetch(*)",
-      "NotebookRead(*)",
-      "NotebookEdit(*)",
+      "Grep(*)",
       "LS(*)",
       "TodoWrite(*)",
-      "Task(*)"
+      "Task(*)",
+      "exit_plan_mode(*)"
     ],
     "deny": [
       "Bash(rm -rf /)",
+      "Bash(sudo:*)",
       "Bash(rm -rf ~)",
-      "Bash(sudo rm -rf *)"
-    ],
-    "additionalDirectories": []
+      "Bash(curl:*)",
+      "Bash(wget:*)"
+    ]
   },
   "hooks": {
-    "PreToolUse": {
-      "Bash": ".claude/hooks/pre_tool_use.sh"
-    },
-    "PostToolUse": {
-      "Bash": ".claude/hooks/post_tool_use.sh"
-    }
+    "PreToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run .claude/hooks/pre_tool_use.py"
+          },
+          {
+            "type": "command",
+            "command": "uv run .claude/hooks/send_event.py --source-app claude-code-template --event-type PreToolUse --summarize"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run .claude/hooks/post_tool_use.py"
+          },
+          {
+            "type": "command",
+            "command": "uv run .claude/hooks/send_event.py --source-app claude-code-template --event-type PostToolUse --summarize"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run .claude/hooks/notification.py --notify "
+          },
+          {
+            "type": "command",
+            "command": "uv run .claude/hooks/send_event.py --source-app claude-code-template --event-type Notification --summarize"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run .claude/hooks/stop.py --chat"
+          },
+          {
+            "type": "command",
+            "command": "uv run .claude/hooks/send_event.py --source-app claude-code-template --event-type Stop --add-chat"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run .claude/hooks/subagent_stop.py"
+          },
+          {
+            "type": "command",
+            "command": "uv run .claude/hooks/send_event.py --source-app claude-code-template --event-type SubagentStop"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run .claude/hooks/send_event.py --source-app claude-code-template --event-type PreCompact"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run .claude/hooks/user_prompt_submit.py --log-only"
+          },
+          {
+            "type": "command",
+            "command": "uv run .claude/hooks/send_event.py --source-app claude-code-template --event-type UserPromptSubmit --summarize"
+          }
+        ]
+      }
+    ]
   },
   "env": {
     "CLAUDE_CODE_PROJECT_TYPE": "template"

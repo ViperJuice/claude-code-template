@@ -1,0 +1,31 @@
+# .claude/.gitignore - Ignore runtime state files
+
+# State files (runtime only)
+state/*.json
+state/**/*.json
+
+# Temporary files
+*.tmp
+*.log
+*.bak
+*~
+.DS_Store
+
+# Local overrides
+*.local
+*.local.*
+config.local.json
+
+# Agent execution logs
+agents/**/*.log
+agents/**/*.tmp
+
+# But keep directory structure
+!state/.gitkeep
+!agents/.gitkeep
+!commands/.gitkeep
+!scripts/.gitkeep
+
+# Don't ignore the setup script
+!scripts/setup-native-subagents.sh
+!scripts/detect-language.sh
