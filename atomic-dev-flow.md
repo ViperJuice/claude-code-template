@@ -214,7 +214,6 @@ flowchart TD
     
     %% Dotted connections from Branch 4 to Branch n
     RenovationTesterBranch4 -. "Old/modified validated interfaces" .-> RenovationArchitectBranchn
-    RenovationTesterBranch4Levelm -. "Test results (success/failure)" .-> RenovationTesterBranch4
     
     %% Implementation Summary Flow (Backwards Consolidation)
     %% Branch 4: Level m -> Level 1 -> Level 0 -> Renovation Architect
