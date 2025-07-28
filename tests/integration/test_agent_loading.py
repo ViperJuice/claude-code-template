@@ -53,7 +53,7 @@ def test_all_agents():
     
     agents = {}
     for agent_file in agent_files:
-        if agent_file.name == '.gitkeep':
+        if agent_file.name in ['.gitkeep', 'README.md']:
             continue
             
         print(f"Validating {agent_file.name}...")
@@ -87,18 +87,35 @@ def test_agent_roles():
     """Test that all expected agent roles are present"""
     agents = test_all_agents()
     
-    expected_agents = {
+    # Core orchestration agents
+    core_agents = {
         'phase-architect', 'interface-designer', 'interface-verifier',
-        'worktree-manager', 'worktree-lead', 'test-builder',
-        'coder', 'integration-guardian', 'doc-scribe'
+        'worktree-manager', 'worktree-lead', 'integration-guardian', 
+        'doc-scribe', 'pattern-advisor', 'anti-pattern-detector'
     }
     
+    # Language-specific test builders
+    test_builder_agents = {
+        'test-builder-systems', 'test-builder-web', 'test-builder-scripting',
+        'test-builder-jvm', 'test-builder-functional', 'test-builder-mobile',
+        'test-builder-data', 'test-builder-assembly'
+    }
+    
+    # Language-specific coders
+    coder_agents = {
+        'coder-systems', 'coder-web', 'coder-scripting',
+        'coder-jvm', 'coder-functional', 'coder-mobile',
+        'coder-data', 'coder-assembly'
+    }
+    
+    all_expected = core_agents | test_builder_agents | coder_agents
+    
     print("\nChecking for required agents...")
-    missing_agents = expected_agents - set(agents.keys())
+    missing_agents = all_expected - set(agents.keys())
     if missing_agents:
         raise ValueError(f"Missing required agents: {missing_agents}")
     
-    print(f"  ✓ All {len(expected_agents)} required agents present")
+    print(f"  ✓ All {len(all_expected)} required agents present")
 
 def test_phase_command():
     """Test that phase breakdown command exists"""

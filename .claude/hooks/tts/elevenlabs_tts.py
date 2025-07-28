@@ -62,7 +62,12 @@ def main():
         
         try:
             # Get voice ID from environment variable
-            voice_id = os.getenv('ELEVENLABS_VOICE_ID', 'ZF6FPAbjXT4488VcRRnw')
+            voice_id = os.getenv('ELEVENLABS_VOICE_ID')
+            if not voice_id:
+                print("❌ Error: ELEVENLABS_VOICE_ID not found in environment variables")
+                print("Please add your ElevenLabs voice ID to .env file:")
+                print("ELEVENLABS_VOICE_ID=your_voice_id_here")
+                sys.exit(1)
             
             # Generate and play audio directly
             audio = elevenlabs.text_to_speech.convert(
@@ -77,18 +82,6 @@ def main():
             
         except Exception as e:
             print(f"❌ Error: {e}")
-            # Try with a different approach using voice name
-            try:
-                from elevenlabs import generate, play
-                audio = generate(
-                    text=text,
-                    voice="Rachel",
-                    model="eleven_turbo_v2"
-                )
-                play(audio)
-                print("✅ Playback complete (fallback method)!")
-            except Exception as e2:
-                print(f"❌ Fallback also failed: {e2}")
         
         
     except ImportError:

@@ -194,12 +194,49 @@ pub const DataProcessor = struct {
 ## Implementation Process
 
 1. **Read failing tests** to understand requirements
-2. **Implement minimal solution** that makes tests pass
-3. **Run tests** to verify implementation
-4. **Refactor if needed** while keeping tests green
-5. **Handle edge cases** identified by tests
+2. **Analyze patterns** suitable for the implementation:
+   ```bash
+   python3 $CLAUDE_PROJECT_DIR/.claude/scripts/pattern_matcher.py $LANGUAGE analyze "$TASK_DESCRIPTION"
+   ```
+3. **Implement solution using patterns** that makes tests pass
+4. **Run tests** to verify implementation
+5. **Check for anti-patterns** and refactor if needed
+6. **Handle edge cases** identified by tests
 
 ## Common Patterns
+
+### Pattern-Driven Implementation
+
+When implementing, prefer these idiomatic patterns:
+
+**C Patterns:**
+- Module pattern with opaque pointers
+- Resource acquisition with cleanup functions
+- Error codes with errno
+
+**C++ Patterns:**
+- RAII for all resources
+- CRTP for compile-time polymorphism
+- Template metaprogramming when appropriate
+- Pimpl for compilation firewall
+
+**Rust Patterns:**
+- Builder pattern for complex construction
+- Newtype for type safety
+- Interior mutability with RefCell/Mutex
+- Type state for compile-time guarantees
+
+**Go Patterns:**
+- Functional options for configuration
+- Interface segregation
+- Error wrapping with context
+- Worker pools for concurrency
+
+**Zig Patterns:**
+- Comptime for generic programming
+- Error unions for explicit error handling
+- Allocator injection
+- Sentinel-terminated arrays
 
 ### Memory Safety
 - C: Manual management with careful cleanup
@@ -222,4 +259,13 @@ pub const DataProcessor = struct {
 - Go: Goroutines and channels
 - Zig: No built-in concurrency (use OS primitives)
 
-Remember: Write the minimum code needed to make tests pass, then refactor for clarity and performance.
+### Anti-Patterns to Avoid
+
+**Never do:**
+- C: Memory leaks, buffer overflows
+- C++: Naked new/delete, exception in destructors
+- Rust: Excessive cloning, `.unwrap()` in production
+- Go: Ignoring errors, goroutine leaks
+- Zig: Forgetting to free allocations
+
+Remember: Write idiomatic code using established patterns. The best code is not clever, but clear and maintainable.

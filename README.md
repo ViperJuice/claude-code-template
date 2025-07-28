@@ -1,15 +1,15 @@
 # Claude Code Multi-Language Project Template
 
 [![Claude Code Compatible](https://img.shields.io/badge/Claude%20Code-Compatible-blue)](https://docs.anthropic.com/en/docs/claude-code/)
-[![Languages](https://img.shields.io/badge/Languages-25%2B-green)](docs/languages.md)
+[![Languages](https://img.shields.io/badge/Languages-33-green)](docs/languages.md)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 
-This template provides a complete Claude Code setup with native sub-agents for orchestrating parallel development across 25+ programming languages with zero merge conflicts.
+This template provides a complete Claude Code setup with native sub-agents for orchestrating parallel development across 33 programming languages with zero merge conflicts.
 
 ## Features
 
-- **9 Specialized AI Sub-Agents**: Each handles a specific aspect of development
-- **25+ Language Support**: From systems languages (C/C++/Rust) to modern web (TypeScript/Go)
+- **25 Specialized AI Sub-Agents**: 9 core orchestration agents + 16 language-specific agents
+- **33 Language Support**: From systems languages (C/C++/Rust) to modern web (TypeScript/Go)
 - **Zero Merge Conflicts**: Git work tree isolation ensures parallel development
 - **TDD Enforcement**: Tests are written before implementation
 - **Automated Documentation**: Keeps docs in sync with code
@@ -40,15 +40,14 @@ specs/               # Project specifications (ROADMAP.md)
    cd my-project
    ```
 
-2. **Initialize the template**
+2. **Install dependencies and initialize**
 
    ```bash
-   # Quick setup
-   ./scripts/setup.sh
+   # Install Python dependencies (including uv for hooks)
+   pip install -r requirements.txt
    
-   # Or manual setup
-   pip install -r .claude/scripts/requirements.txt
-   ./scripts/validate.sh
+   # Run setup script
+   ./scripts/setup.sh
    ```
 
 3. **Try example projects**

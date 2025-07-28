@@ -104,5 +104,5 @@ your-project/
 
 - The setup script creates placeholder files - you need to copy the actual content from the artifacts
 - All sub-agents are now individual files (we split the bundled ones)
-- The system supports 25+ programming languages out of the box
+- The system supports 33 programming languages out of the box
 - Customize `.claude/config.json` for your specific language preferences

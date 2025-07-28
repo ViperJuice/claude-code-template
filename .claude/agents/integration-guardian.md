@@ -1,149 +1,3 @@
-All projects
-Claude Code Project Template
-Claud Code Project template setup.
-Project File Zipping Tool
-Last message 5 minutes ago
-Project File Organization
-Last message 46 minutes ago
-Multi-Language Project Makefile
-Last message 4 hours ago
-Claude Code Template Agent Design
-Last message 14 hours ago
-Claude Project Directory Structure
-Last message 1 day ago
-Project knowledge
-4% of project capacity used
-Multi-Language Claude Code Implementation Guide.md
-221 lines
-md
-Docker Compose Multi-Language Development.txt
-136 lines
-txt
-GitHub Actions Multi-Language CI/CD.txt
-223 lines
-txt
-Language Detection Script.txt
-87 lines
-txt
-Project Inventory Check Script.txt
-106 lines
-txt
-Legacy Files Cleanup Script.txt
-107 lines
-txt
-Language Detection Script.txt
-87 lines
-txt
-Example ROADMAP.md.md
-152 lines
-md
-Complete Artifacts List - Save These to Your Repo.md
-108 lines
-md
-.claude/.gitignore.txt
-31 lines
-txt
-.claude/config.json.txt
-184 lines
-txt
-setup-native-subagents.sh.txt
-272 lines
-txt
-integration-guardian.md.md
-302 lines
-md
-worktree-manager.md.md
-239 lines
-md
-interface-designer.md.md
-248 lines
-md
-Remaining Essential Sub-Agents.md
-349 lines
-md
-Phase Architect Sub-Agent.md
-205 lines
-md
-Worktree Lead Sub-Agent.md
-204 lines
-md
-Test Builder Sub-Agent.md
-233 lines
-md
-Remaining Essential Sub-Agents.md
-349 lines
-md
-Final Project Structure with Native Sub-Agents.md
-145 lines
-md
-Refactored Phase-Breakdown Command.md
-79 lines
-md
-Refactored Phase-Breakdown Command.md
-79 lines
-md
-Multi-Language Test Builder Sub-Agent.md
-828 lines
-md
-Multi-Language Interface Verifier Sub-Agent.md
-414 lines
-md
-Multi-Language Coder Sub-Agent.md
-1,034 lines
-md
-Claude Code Multi-Language Support Matrix.md
-187 lines
-md
-Multi-Language Phase Execution Example.md
-402 lines
-md
-Master Makefile for Multi-Language Project.txt
-315 lines
-txt
-Example: Complete Phase Execution Flow.md
-384 lines
-md
-Enhanced Claude Code Agent Architecture.md
-465 lines
-md
-Multi-Language Claude Code Agents - Summary.md
-117 lines
-md
-Final Project Structure with Native Sub-Agents.md
-145 lines
-md
-settings.local.json
-11 lines
-json
-settings.json
-33 lines
-json
-pre_tool_use.sh
-37 lines
-sh
-post_tool_use.sh
-44 lines
-sh
-test.md
-50 lines
-md
-start.md
-35 lines
-md
-review.md
-49 lines
-md
-README.md
-54 lines
-md
-commit.md
-45 lines
-md
-Claude
-integration-guardian.md.md
-6.77 KB •302 lines
-•
-Formatting may be inconsistent from source
 ---
 name: integration-guardian
 description: Manages PR merges to main branch ensuring all tests pass and no conflicts exist. Handles progressive integration of worktree branches. Use when components are ready for integration.
@@ -288,9 +142,39 @@ elif [ -f "go.mod" ]; then
     go test -cover ./...
 fi
 
-# If all tests pass, merge
+# If all tests pass, check for anti-patterns
 if [ $? -eq 0 ]; then
-    echo "Tests passed! Merging..."
+    echo "Tests passed! Checking for anti-patterns..."
+    
+    # Run anti-pattern detection
+    Task({
+        description: "Scan PR for anti-patterns",
+        prompt: `Scan PR #${pr_number} for anti-patterns and code smells before merging.
+        
+Component: ${component}
+Branch: Current PR branch
+
+Focus on:
+- Security vulnerabilities
+- Memory leaks
+- Concurrency issues
+- Code smells that could cause production issues
+
+If critical issues are found, provide a detailed report and block the merge.`,
+        subagent_type: "anti-pattern-detector"
+    });
+    
+    # Check anti-pattern scan results
+    if [ -f ".claude/state/anti-pattern-report.json" ]; then
+        critical_count=$(jq -r '.summary.critical // 0' .claude/state/anti-pattern-report.json)
+        if [ "$critical_count" -gt 0 ]; then
+            echo "❌ Critical anti-patterns detected! Blocking merge."
+            echo "See anti-pattern report for details."
+            exit 1
+        fi
+    fi
+    
+    echo "✅ No critical anti-patterns found. Merging..."
     gh pr merge $pr_number \
         --merge \
         --delete-branch \

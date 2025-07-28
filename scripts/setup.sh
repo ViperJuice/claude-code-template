@@ -16,7 +16,11 @@ mkdir -p .claude/state worktrees/{} tests/integration
 
 # Install Python dependencies
 echo "Installing Python dependencies..."
-pip install -r .claude/scripts/requirements.txt
+if [ -f "requirements.txt" ]; then
+    pip install -r requirements.txt
+else
+    pip install -r .claude/scripts/requirements.txt
+fi
 
 # Setup git worktree
 echo "Configuring git worktree..."

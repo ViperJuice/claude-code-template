@@ -21,7 +21,7 @@ Get up and running with the Claude Code multi-language development template in 5
 
 2. **Run the setup script**
    ```bash
-   ./.claude/scripts/setup-native-subagents.sh
+   ./scripts/setup.sh
    ```
 
 3. **Verify installation**

@@ -173,9 +173,30 @@ esac
 # Should see all tests failing - this is correct for TDD!
 ```
 
-### Step 6: Implement Features
+### Step 6: Implement Features with Pattern Guidance
 
-Select appropriate coder based on detected language:
+First, get pattern recommendations:
+
+```javascript
+// Get pattern advice for implementation
+Task({
+  description: "Get pattern recommendations",
+  prompt: `Analyze the component [COMPONENT_NAME] and suggest design patterns for implementation.
+
+Component type: [COMPONENT_TYPE]
+Language: ${DETECTED_LANG}
+Interfaces to implement: [LIST_INTERFACES]
+
+Provide specific pattern recommendations for:
+- Component structure
+- Error handling approach
+- Concurrency patterns (if applicable)
+- Testing patterns`,
+  subagent_type: "pattern-advisor"
+});
+```
+
+Then implement with pattern awareness:
 
 ```javascript
 // Use same language mapping for coder agent
@@ -189,10 +210,13 @@ Component language: ${DETECTED_LANG}
 Requirements:
 - Implement all methods from interfaces
 - Make all tests green
+- Apply recommended design patterns from pattern advisor
 - Follow ${DETECTED_LANG} idioms and best practices
 - Maintain clean code principles
 - Add proper error handling
 - Achieve 80%+ coverage
+
+Pattern context: [Include pattern recommendations from previous step]
 
 Work in the current directory: worktrees/[COMPONENT_NAME]`,
   subagent_type: coderAgent

@@ -1,0 +1,75 @@
+{
+  "language": "rust",
+  "patterns": {
+    "builder": {
+      "description": "Provides a flexible way to construct complex objects step by step.",
+      "whenToUse": "When you need to create objects with many optional parameters or complex initialization.",
+      "example": "#[derive(Default)]\nstruct ServerBuilder {\n    host: Option<String>,\n    port: Option<u16>,\n    timeout: Option<Duration>,\n}\n\nimpl ServerBuilder {\n    fn new() -> Self {\n        Self::default()\n    }\n    \n    fn host(mut self, host: impl Into<String>) -> Self {\n        self.host = Some(host.into());\n        self\n    }\n    \n    fn port(mut self, port: u16) -> Self {\n        self.port = Some(port);\n        self\n    }\n    \n    fn build(self) -> Result<Server, BuilderError> {\n        Ok(Server {\n            host: self.host.ok_or(BuilderError::MissingHost)?,\n            port: self.port.unwrap_or(8080),\n            timeout: self.timeout.unwrap_or(Duration::from_secs(30)),\n        })\n    }\n}"
+    },
+    "newtype": {
+      "description": "Wraps a type to provide type safety and implement different traits.",
+      "whenToUse": "When you want to add semantic meaning to primitive types or implement external traits for external types.",
+      "example": "struct UserId(u64);\nstruct Email(String);\n\nimpl UserId {\n    fn new(id: u64) -> Self {\n        UserId(id)\n    }\n    \n    fn value(&self) -> u64 {\n        self.0\n    }\n}\n\nimpl From<String> for Email {\n    fn from(s: String) -> Self {\n        Email(s)\n    }\n}"
+    },
+    "typestate": {
+      "description": "Encodes state transitions in the type system to prevent invalid operations at compile time.",
+      "whenToUse": "When you have objects that go through distinct states with different allowed operations.",
+      "example": "struct Door<State> {\n    state: PhantomData<State>,\n}\n\nstruct Open;\nstruct Closed;\nstruct Locked;\n\nimpl Door<Closed> {\n    fn open(self) -> Door<Open> {\n        Door { state: PhantomData }\n    }\n    \n    fn lock(self) -> Door<Locked> {\n        Door { state: PhantomData }\n    }\n}\n\nimpl Door<Open> {\n    fn close(self) -> Door<Closed> {\n        Door { state: PhantomData }\n    }\n}\n\nimpl Door<Locked> {\n    fn unlock(self) -> Door<Closed> {\n        Door { state: PhantomData }\n    }\n}"
+    },
+    "strategy": {
+      "description": "Defines a family of algorithms and makes them interchangeable through traits.",
+      "whenToUse": "When you have multiple ways to perform a task and want to switch between them.",
+      "example": "trait CompressionStrategy {\n    fn compress(&self, data: &[u8]) -> Vec<u8>;\n}\n\nstruct GzipCompression;\nstruct ZstdCompression;\n\nimpl CompressionStrategy for GzipCompression {\n    fn compress(&self, data: &[u8]) -> Vec<u8> {\n        // Gzip compression logic\n    }\n}\n\nstruct Compressor {\n    strategy: Box<dyn CompressionStrategy>,\n}\n\nimpl Compressor {\n    fn compress(&self, data: &[u8]) -> Vec<u8> {\n        self.strategy.compress(data)\n    }\n}"
+    },
+    "interior_mutability": {
+      "description": "Allows mutation of data even when behind an immutable reference using Cell/RefCell/Mutex.",
+      "whenToUse": "When you need to mutate data through shared references, typically in single-threaded (RefCell) or multi-threaded (Mutex) contexts.",
+      "example": "use std::cell::RefCell;\nuse std::rc::Rc;\n\nstruct Counter {\n    value: RefCell<i32>,\n}\n\nimpl Counter {\n    fn new() -> Self {\n        Counter { value: RefCell::new(0) }\n    }\n    \n    fn increment(&self) {\n        *self.value.borrow_mut() += 1;\n    }\n    \n    fn get(&self) -> i32 {\n        *self.value.borrow()\n    }\n}"
+    },
+    "raii_guard": {
+      "description": "Ensures cleanup code runs when a value goes out of scope using Drop trait.",
+      "whenToUse": "When you need to guarantee cleanup of resources or restoration of state.",
+      "example": "struct TempFile {\n    path: PathBuf,\n}\n\nimpl TempFile {\n    fn new(path: PathBuf) -> io::Result<Self> {\n        File::create(&path)?;\n        Ok(TempFile { path })\n    }\n}\n\nimpl Drop for TempFile {\n    fn drop(&mut self) {\n        let _ = fs::remove_file(&self.path);\n    }\n}\n\n// Usage\n{\n    let _temp = TempFile::new(\"temp.txt\".into())?;\n    // Use file\n} // File automatically deleted here"
+    },
+    "phantom_data": {
+      "description": "Marks types as using generic parameters they don't actually store.",
+      "whenToUse": "When you need to associate types at compile time without runtime overhead.",
+      "example": "struct Sender<T> {\n    channel_id: u64,\n    _phantom: PhantomData<T>,\n}\n\nimpl<T> Sender<T> {\n    fn send(&self, value: T) -> Result<(), SendError> {\n        // Send value of type T\n    }\n}\n\n// Ensures type safety without storing T\nlet int_sender: Sender<i32> = Sender::new();\nlet str_sender: Sender<&str> = Sender::new();\n// int_sender.send(\"hello\"); // Compile error!"
+    },
+    "extension_traits": {
+      "description": "Adds methods to existing types through trait implementations.",
+      "whenToUse": "When you want to add functionality to types you don't own.",
+      "example": "trait VecExt<T> {\n    fn split_off_last(&mut self) -> Option<T>;\n}\n\nimpl<T> VecExt<T> for Vec<T> {\n    fn split_off_last(&mut self) -> Option<T> {\n        self.pop()\n    }\n}\n\n// Usage\nlet mut vec = vec![1, 2, 3];\nlet last = vec.split_off_last(); // New method on Vec"
+    },
+    "visitor": {
+      "description": "Separates algorithms from the data structures they operate on.",
+      "whenToUse": "When you need to perform operations on a complex object structure without modifying the structures.",
+      "example": "trait Visitor {\n    fn visit_file(&mut self, file: &File);\n    fn visit_directory(&mut self, dir: &Directory);\n}\n\ntrait Visitable {\n    fn accept(&self, visitor: &mut dyn Visitor);\n}\n\nstruct File { name: String }\nstruct Directory { name: String, entries: Vec<Box<dyn Visitable>> }\n\nimpl Visitable for File {\n    fn accept(&self, visitor: &mut dyn Visitor) {\n        visitor.visit_file(self);\n    }\n}\n\nstruct SizeCalculator {\n    total_size: u64,\n}\n\nimpl Visitor for SizeCalculator {\n    fn visit_file(&mut self, file: &File) {\n        self.total_size += file.size();\n    }\n}"
+    },
+    "iterator": {
+      "description": "Provides a way to access elements of a collection sequentially.",
+      "whenToUse": "When you need to traverse collections in a uniform way.",
+      "example": "struct Counter {\n    count: u32,\n    max: u32,\n}\n\nimpl Iterator for Counter {\n    type Item = u32;\n    \n    fn next(&mut self) -> Option<Self::Item> {\n        if self.count < self.max {\n            self.count += 1;\n            Some(self.count)\n        } else {\n            None\n        }\n    }\n}\n\n// Usage\nlet counter = Counter { count: 0, max: 5 };\nfor num in counter {\n    println!(\"{}\", num); // Prints 1 through 5\n}"
+    },
+    "error_types": {
+      "description": "Defines custom error types that implement std::error::Error.",
+      "whenToUse": "When you need rich error information and error chaining.",
+      "example": "#[derive(Debug)]\nenum AppError {\n    Io(io::Error),\n    Parse(ParseIntError),\n    Custom(String),\n}\n\nimpl fmt::Display for AppError {\n    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {\n        match self {\n            AppError::Io(e) => write!(f, \"IO error: {}\", e),\n            AppError::Parse(e) => write!(f, \"Parse error: {}\", e),\n            AppError::Custom(s) => write!(f, \"Error: {}\", s),\n        }\n    }\n}\n\nimpl From<io::Error> for AppError {\n    fn from(err: io::Error) -> Self {\n        AppError::Io(err)\n    }\n}"
+    },
+    "async_trait": {
+      "description": "Enables async functions in traits using the async-trait crate or manual implementation.",
+      "whenToUse": "When you need polymorphism with async functions.",
+      "example": "#[async_trait]\ntrait Database {\n    async fn get(&self, key: &str) -> Result<String, DbError>;\n    async fn set(&self, key: &str, value: String) -> Result<(), DbError>;\n}\n\n#[async_trait]\nimpl Database for PostgresDb {\n    async fn get(&self, key: &str) -> Result<String, DbError> {\n        // Async database query\n        sqlx::query!(\"SELECT value FROM kv WHERE key = $1\", key)\n            .fetch_one(&self.pool)\n            .await\n            .map(|row| row.value)\n    }\n}"
+    },
+    "cow_optimization": {
+      "description": "Uses Cow (Clone on Write) to avoid unnecessary cloning.",
+      "whenToUse": "When you might need to modify data but want to avoid cloning if possible.",
+      "example": "use std::borrow::Cow;\n\nfn process_text(input: &str) -> Cow<str> {\n    if input.contains(\"old\") {\n        Cow::Owned(input.replace(\"old\", \"new\"))\n    } else {\n        Cow::Borrowed(input) // No allocation!\n    }\n}\n\n// Usage\nlet text = \"hello world\";\nlet result = process_text(text); // No allocation\nlet text2 = \"old world\";\nlet result2 = process_text(text2); // Allocates only when needed"
+    },
+    "sealed_trait": {
+      "description": "Prevents external code from implementing a trait.",
+      "whenToUse": "When you want to control all implementations of a trait for API stability.",
+      "example": "mod private {\n    pub trait Sealed {}\n}\n\npub trait MyTrait: private::Sealed {\n    fn method(&self);\n}\n\n// Only types that implement Sealed can implement MyTrait\nimpl private::Sealed for String {}\nimpl MyTrait for String {\n    fn method(&self) {\n        // Implementation\n    }\n}\n\n// External code cannot implement MyTrait for their types"
+    }
+  }
+}

@@ -48,7 +48,7 @@ fi
 # Test 3: Python module imports
 echo -e "\n${GREEN}Test 3: Python Module Imports${NC}"
 cd $OLDPWD
-if python3 -c "from claude_setup import config, detect_language, inventory_check" 2>/dev/null; then
+if PYTHONPATH="$OLDPWD/.claude/scripts:$PYTHONPATH" python3 -c "from claude_setup import config, detect_language, inventory_check" 2>/dev/null; then
     echo "✓ Python modules import correctly"
 else
     echo -e "${RED}✗ Python module import failed${NC}"

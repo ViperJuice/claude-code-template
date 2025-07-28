@@ -1,0 +1,321 @@
+{
+  "language": "C",
+  "paradigm": "Procedural/Systems",
+  "patterns": {
+    "Abstract Factory": {
+      "description": "Provides an interface for creating families of related or dependent objects without specifying their concrete classes, often implemented using structs of function pointers (v-tables).",
+      "whenToUse": "When your system needs to be independent of how its products are created, composed, and represented, and you have families of products that are designed to be used together.",
+      "example": "```c\ntypedef struct { void (*draw)(void*); } Widget;\ntypedef struct { Widget base; } Button;\ntypedef struct { Widget base; } TextField;\n\ntypedef struct {\n    Button* (*createButton)(void);\n    TextField* (*createTextField)(void);\n} WidgetFactory;\n\n// Concrete Factory 1\nButton* createMaterialButton() { /* ... */ return NULL; }\nTextField* createMaterialTextField() { /* ... */ return NULL; }\n\nWidgetFactory materialFactory = {\n    .createButton = createMaterialButton,\n    .createTextField = createMaterialTextField\n};\n\n// Concrete Factory 2\nButton* createCupertinoButton() { /* ... */ return NULL; }\nTextField* createCupertinoTextField() { /* ... */ return NULL; }\n\nWidgetFactory cupertinoFactory = {\n    .createButton = createCupertinoButton,\n    .createTextField = createCupertinoTextField\n};\n```"
+    },
+    "Builder": {
+      "description": "Separates the construction of a complex object from its representation, allowing the same construction process to create different representations. In C, this is done with a builder struct and a series of setter functions.",
+      "whenToUse": "When a struct has many fields, some of which are optional or require complex validation. It avoids a constructor with a long list of parameters.",
+      "example": "```c\ntypedef struct {\n    char* host;\n    int port;\n    int timeout;\n} Server;\n\ntypedef struct {\n    char* host;\n    int port;\n    int timeout;\n    bool host_set;\n    bool port_set;\n} ServerBuilder;\n\nServerBuilder* server_builder_new() {\n    return calloc(1, sizeof(ServerBuilder));\n}\n\nvoid server_builder_set_host(ServerBuilder* sb, const char* host) {\n    sb->host = strdup(host);\n    sb->host_set = true;\n}\n\nServer* server_builder_build(ServerBuilder* sb) {\n    if (!sb->host_set) return NULL; // Validation\n    Server* s = malloc(sizeof(Server));\n    s->host = sb->host;\n    s->port = sb->port_set ? sb->port : 8080;\n    s->timeout = sb->timeout ? sb->timeout : 30;\n    // Note: The builder struct should be freed separately.\n    return s;\n}\n```"
+    },
+    "Factory Method": {
+      "description": "Defines an interface for creating an object, but lets subclasses (or in C, different implementations) decide which class to instantiate. Implemented using function pointers.",
+      "whenToUse": "When a system needs to create objects but wants to delegate the choice of which type of object to create to its clients or to runtime conditions.",
+      "example": "```c\ntypedef struct {\n    void (*process)(void*);\n    void* data;\n} Handler;\n\nvoid process_file(void* data) { /* ... */ }\nvoid process_network(void* data) { /* ... */ }\n\nHandler* create_file_handler() {\n    Handler* h = malloc(sizeof(Handler));\n    h->process = process_file;\n    return h;\n}\n\nHandler* create_network_handler() {\n    Handler* h = malloc(sizeof(Handler));\n    h->process = process_network;\n    return h;\n}\n\ntypedef Handler* (*HandlerFactory)(void);\nHandlerFactory get_handler_factory(const char* type) {\n    if (strcmp(type, \"file\") == 0) return create_file_handler;\n    if (strcmp(type, \"network\") == 0) return create_network_handler;\n    return NULL;\n}\n```"
+    },
+    "Prototype": {
+      "description": "Specifies the kinds of objects to create using a prototypical instance, and creates new objects by copying this prototype.",
+      "whenToUse": "When creating an object is expensive (e.g., requires database access) and you need copies of an existing object with minor variations.",
+      "example": "```c\ntypedef struct Prototype {\n    void* (*clone)(struct Prototype*);\n    char* data;\n    int size;\n} Prototype;\n\nvoid* prototype_clone(Prototype* p) {\n    Prototype* new_p = malloc(sizeof(Prototype));\n    new_p->clone = p->clone;\n    new_p->data = malloc(p->size);\n    memcpy(new_p->data, p->data, p->size);\n    new_p->size = p->size;\n    return new_p;\n}\n\nPrototype* create_prototype(int size) {\n    Prototype* p = malloc(sizeof(Prototype));\n    p->clone = prototype_clone;\n    p->data = malloc(size);\n    p->size = size;\n    // Initialize data...\n    return p;\n}\n```"
+    },
+    "Singleton": {
+      "description": "Ensures a single global instance of a resource exists throughout the program, often using a static local or global variable.",
+      "whenToUse": "When you need exactly one instance of a resource like a logger, configuration manager, or hardware interface. Be cautious of its impact on testability and concurrency.",
+      "example": "```c\ntypedef struct {\n    int data;\n} ConfigManager;\n\nConfigManager* get_instance() {\n    static ConfigManager* instance = NULL;\n    // Note: Not thread-safe without explicit locking.\n    if (instance == NULL) {\n        instance = (ConfigManager*)malloc(sizeof(ConfigManager));\n        instance->data = 42;\n    }\n    return instance;\n}\n```"
+    },
+    "Adapter": {
+      "description": "Converts the interface of a module into another interface clients expect. Adapter lets modules work together that couldn't otherwise because of incompatible interfaces.",
+      "whenToUse": "To use an existing library or module that has an incompatible interface with the rest of your system.",
+      "example": "```c\n// Legacy interface\ntypedef struct { void (*specific_request)(void); } LegacyService;\n\n// Target interface\ntypedef struct { void (*request)(void*); } TargetService;\n\ntypedef struct {\n    TargetService base;\n    LegacyService* legacy;\n} ServiceAdapter;\n\nvoid adapter_request(void* self) {\n    ServiceAdapter* adapter = (ServiceAdapter*)self;\n    adapter->legacy->specific_request();\n}\n\nTargetService* create_adapter(LegacyService* legacy) {\n    ServiceAdapter* adapter = malloc(sizeof(ServiceAdapter));\n    adapter->base.request = adapter_request;\n    adapter->legacy = legacy;\n    return (TargetService*)adapter;\n}\n```"
+    },
+    "Bridge": {
+      "description": "Decouples an abstraction from its implementation so that the two can vary independently. In C, this is done by holding a pointer to an implementation struct.",
+      "whenToUse": "When you want to avoid a permanent binding between an abstraction and its implementation, or when both need to be extensible independently.",
+      "example": "```c\ntypedef struct {\n    void (*draw_line)(int x1, int y1, int x2, int y2);\n} DrawingAPI;\n\ntypedef struct {\n    DrawingAPI* api;\n    void (*draw)(void* self);\n} Shape;\n\nvoid circle_draw(void* self) {\n    Shape* shape = (Shape*)self;\n    shape->api->draw_line(10, 10, 20, 20); // Simplified circle\n}\n\nShape* create_circle(DrawingAPI* api) {\n    Shape* s = malloc(sizeof(Shape));\n    s->api = api;\n    s->draw = circle_draw;\n    return s;\n}\n```"
+    },
+    "Composite": {
+      "description": "Composes objects into tree structures to represent part-whole hierarchies. Composite lets clients treat individual objects and compositions of objects uniformly.",
+      "whenToUse": "When you have a tree-like structure of objects and you want clients to be able to treat individual objects and groups of objects in the same way.",
+      "example": "```c\ntypedef struct Component {\n    void (*operation)(struct Component*);\n    void* data; // Could be leaf data or composite's children list\n} Component;\n\ntypedef struct {\n    Component** children;\n    int count;\n} CompositeData;\n\nvoid leaf_operation(Component* c) { /* ... */ }\n\nvoid composite_operation(Component* c) {\n    CompositeData* data = (CompositeData*)c->data;\n    for (int i = 0; i < data->count; i++) {\n        data->children[i]->operation(data->children[i]);\n    }\n}\n```"
+    },
+    "Decorator": {
+      "description": "Attaches additional responsibilities to an object dynamically. Decorators provide a flexible alternative to subclassing for extending functionality.",
+      "whenToUse": "To add responsibilities to individual objects dynamically and transparently, without affecting other objects.",
+      "example": "```c\ntypedef struct Component {\n    void (*operation)(struct Component*);\n} Component;\n\ntypedef struct {\n    Component base;\n    Component* wrapped;\n} Decorator;\n\nvoid logging_decorator_op(Component* c) {\n    Decorator* d = (Decorator*)c;\n    printf(\"LOG: Calling operation\\n\");\n    d->wrapped->operation(d->wrapped);\n    printf(\"LOG: Operation finished\\n\");\n}\n\nComponent* create_logging_decorator(Component* c) {\n    Decorator* d = malloc(sizeof(Decorator));\n    d->base.operation = logging_decorator_op;\n    d->wrapped = c;\n    return (Component*)d;\n}\n```"
+    },
+    "Facade": {
+      "description": "Provides a unified, high-level interface to a set of interfaces in a subsystem. Facade defines a simpler interface that makes the subsystem easier to use.",
+      "whenToUse": "To provide a simple interface to a complex subsystem, reducing dependencies and decoupling clients from the subsystem's implementation.",
+      "example": "```c\n// Subsystem components\nvoid subsystem1_init();\nvoid subsystem2_init();\nvoid subsystem1_action();\nvoid subsystem2_action();\n\n// Facade\ntypedef struct {\n    // Facade might hold state for the subsystem\n} SystemFacade;\n\nvoid system_facade_startup(SystemFacade* f) {\n    printf(\"Starting up system...\\n\");\n    subsystem1_init();\n    subsystem2_init();\n}\n\nvoid system_facade_do_work(SystemFacade* f) {\n    subsystem1_action();\n    subsystem2_action();\n}\n```"
+    },
+    "Flyweight": {
+      "description": "Uses sharing to support large numbers of fine-grained objects efficiently. A flyweight is a shared object that can be used in multiple contexts simultaneously.",
+      "whenToUse": "When an application uses a large number of objects that have some shared, immutable state (intrinsic) and some unique, mutable state (extrinsic).",
+      "example": "```c\ntypedef struct {\n    char symbol;        // Intrinsic state (shared)\n    char* font_data;    // Intrinsic state (shared)\n} CharacterFlyweight;\n\nCharacterFlyweight* get_character_flyweight(char c) {\n    static CharacterFlyweight* flyweights[256] = {0};\n    if (flyweights[(unsigned char)c] == NULL) {\n        flyweights[(unsigned char)c] = malloc(sizeof(CharacterFlyweight));\n        // Load font data, etc.\n    }\n    return flyweights[(unsigned char)c];\n}\n\nvoid draw_character(char c, int x, int y) { // x, y are extrinsic state\n    CharacterFlyweight* fw = get_character_flyweight(c);\n    // Use fw->font_data to draw at (x, y)\n}\n```"
+    },
+    "Proxy": {
+      "description": "Provides a surrogate or placeholder for another object to control access to it. This is often used for lazy loading, access control, or logging.",
+      "whenToUse": "When you need a more versatile or sophisticated reference to an object than a simple pointer, e.g., for remote objects, virtual objects, or protected access.",
+      "example": "```c\ntypedef struct { void (*request)(void*); } Service;\n\ntypedef struct {\n    Service* real_service;\n    bool initialized;\n} RealServiceData;\n\nvoid proxy_request(void* proxy_data) {\n    RealServiceData* data = (RealServiceData*)proxy_data;\n    if (!data->initialized) {\n        // data->real_service = create_real_service();\n        data->initialized = true;\n    }\n    printf(\"Proxy: logging access.\\n\");\n    data->real_service->request(data->real_service);\n}\n\nService* create_proxy_service() {\n    Service* proxy = malloc(sizeof(Service));\n    proxy->request = proxy_request;\n    // Associate proxy_data with the proxy service instance.\n    return proxy;\n}\n```"
+    },
+    "Chain of Responsibility": {
+      "description": "Avoids coupling the sender of a request to its receiver by giving more than one object a chance to handle the request. The receiving objects are chained and the request is passed along the chain until an object handles it.",
+      "whenToUse": "When more than one object may handle a request, and the handler isn't known beforehand. The handler should be ascertained automatically.",
+      "example": "```c\ntypedef struct Handler {\n    struct Handler* next;\n    bool (*handle_request)(struct Handler*, int request_type);\n} Handler;\n\nbool handler1_func(Handler* h, int type) {\n    if (type == 1) { printf(\"Handler 1 handles.\\n\"); return true; }\n    return h->next ? h->next->handle_request(h->next, type) : false;\n}\n\nbool handler2_func(Handler* h, int type) {\n    if (type == 2) { printf(\"Handler 2 handles.\\n\"); return true; }\n    return h->next ? h->next->handle_request(h->next, type) : false;\n}\n```"
+    },
+    "Command": {
+      "description": "Encapsulates a request as an object, thereby letting you parameterize clients with different requests, queue or log requests, and support undoable operations.",
+      "whenToUse": "To parameterize objects by an action to perform, to specify, queue, and execute requests at different times, and to support undo.",
+      "example": "```c\ntypedef struct Command {\n    void (*execute)(struct Command*);\n    void* receiver; // The object that will perform the action\n} Command;\n\nvoid light_on_execute(Command* c) { /* c->receiver is the light object */ }\n\nCommand* create_light_on_command(void* light) {\n    Command* cmd = malloc(sizeof(Command));\n    cmd->execute = light_on_execute;\n    cmd->receiver = light;\n    return cmd;\n}\n```"
+    },
+    "Interpreter": {
+      "description": "Given a language, defines a representation for its grammar along with an interpreter that uses the representation to interpret sentences in the language.",
+      "whenToUse": "When there is a language to interpret and you can represent sentences in the language as abstract syntax trees. The grammar should be simple.",
+      "example": "```c\ntypedef struct Expression {\n    int (*interpret)(struct Expression*);\n} Expression;\n\ntypedef struct { Expression base; int value; } NumberExpr;\ntypedef struct { Expression base; Expression* left; Expression* right; } AddExpr;\n\nint interpret_number(Expression* e) { return ((NumberExpr*)e)->value; }\nint interpret_add(Expression* e) {\n    AddExpr* ae = (AddExpr*)e;\n    return ae->left->interpret(ae->left) + ae->right->interpret(ae->right);\n}\n```"
+    },
+    "Iterator": {
+      "description": "Provides a way to access the elements of an aggregate object sequentially without exposing its underlying representation.",
+      "whenToUse": "To access an aggregate object's contents without exposing its internal representation and to support multiple traversals of aggregate objects.",
+      "example": "```c\ntypedef struct {\n    int* data;\n    int size;\n} IntArray;\n\ntypedef struct {\n    IntArray* collection;\n    int index;\n} IntArrayIterator;\n\nbool has_next(IntArrayIterator* it) { return it->index < it->collection->size; }\nint next(IntArrayIterator* it) { return it->collection->data[it->index++]; }\n```"
+    },
+    "Mediator": {
+      "description": "Defines an object that encapsulates how a set of objects interact. Mediator promotes loose coupling by keeping objects from referring to each other explicitly.",
+      "whenToUse": "When a set of objects communicate in well-defined but complex ways. The resulting interdependencies are unstructured and difficult to understand.",
+      "example": "```c\ntypedef struct Mediator Mediator;\ntypedef struct Colleague { Mediator* mediator; } Colleague;\n\nstruct Mediator {\n    Colleague* colleague1;\n    Colleague* colleague2;\n    void (*notify)(Mediator*, Colleague* sender, const char* event);\n};\n\nvoid mediator_notify_func(Mediator* m, Colleague* sender, const char* event) {\n    if (sender == m->colleague1) { /* notify colleague2 */ }\n}\n```"
+    },
+    "Memento": {
+      "description": "Without violating encapsulation, captures and externalizes an object's internal state so that the object can be restored to this state later.",
+      "whenToUse": "When you need to save and restore the state of an object, for example, to implement an undo/redo mechanism.",
+      "example": "```c\ntypedef struct { char* state; } Memento;\n\ntypedef struct {\n    char* state;\n} Originator;\n\nMemento* create_memento(Originator* o) {\n    Memento* m = malloc(sizeof(Memento));\n    m->state = strdup(o->state);\n    return m;\n}\n\nvoid restore_from_memento(Originator* o, Memento* m) {\n    free(o->state);\n    o->state = strdup(m->state);\n}\n```"
+    },
+    "Observer": {
+      "description": "Defines a one-to-many dependency between objects so that when one object changes state, all its dependents are notified and updated automatically. Often implemented with callback functions.",
+      "whenToUse": "When a change to one object requires changing others, and you don't know how many objects need to be changed.",
+      "example": "```c\ntypedef void (*ObserverCallback)(void* observer, void* data);\n\ntypedef struct {\n    ObserverCallback* callbacks;\n    void** observers;\n    int count;\n} Subject;\n\nvoid subject_attach(Subject* s, void* obs, ObserverCallback cb) { /* ... */ }\nvoid subject_notify(Subject* s, void* data) {\n    for (int i = 0; i < s->count; i++) {\n        s->callbacks[i](s->observers[i], data);\n    }\n}\n```"
+    },
+    "State": {
+      "description": "Allows an object to alter its behavior when its internal state changes. The object will appear to change its class.",
+      "whenToUse": "When an object's behavior depends on its state, and it must change its behavior at run-time depending on that state.",
+      "example": "```c\ntypedef struct Context Context;\ntypedef struct State { void (*handle)(Context*); } State;\n\nstruct Context { State* current_state; };\n\nvoid handle_stateA(Context* ctx); // Might change ctx->current_state\nvoid handle_stateB(Context* ctx); // Might change ctx->current_state\n\nState stateA = { handle_stateA };\nState stateB = { handle_stateB };\n\nvoid request(Context* ctx) {\n    ctx->current_state->handle(ctx);\n}\n```"
+    },
+    "Strategy": {
+      "description": "Defines a family of algorithms, encapsulates each one, and makes them interchangeable. Strategy lets the algorithm vary independently from clients that use it.",
+      "whenToUse": "When you have many related algorithms and you want to provide a way to select among them at runtime.",
+      "example": "```c\ntypedef int (*SortStrategy)(int* data, int size);\n\nint bubble_sort(int* data, int size) { /* ... */ return 0; }\nint quick_sort(int* data, int size) { /* ... */ return 0; }\n\ntypedef struct {\n    SortStrategy strategy;\n} Sorter;\n\nvoid sort_data(Sorter* s, int* data, int size) {\n    s->strategy(data, size);\n}\n```"
+    },
+    "Template Method": {
+      "description": "Defines the skeleton of an algorithm in an operation, deferring some steps to subclasses. Template Method lets subclasses redefine certain steps of an algorithm without changing the algorithm's structure.",
+      "whenToUse": "To implement the invariant parts of an algorithm once and leave it up to subclasses to implement the behavior that can vary.",
+      "example": "```c\ntypedef struct DataProcessor {\n    void (*read_data)(struct DataProcessor*);\n    void (*process_data)(struct DataProcessor*);\n    void (*save_data)(struct DataProcessor*);\n} DataProcessor;\n\nvoid template_method(DataProcessor* dp) {\n    dp->read_data(dp);\n    dp->process_data(dp);\n    dp->save_data(dp);\n}\n\nvoid csv_read(DataProcessor* dp) { /* ... */ }\n// Implementations for csv_process and csv_save\n```"
+    },
+    "Visitor": {
+      "description": "Represents an operation to be performed on the elements of an object structure. Visitor lets you define a new operation without changing the classes of the elements on which it operates.",
+      "whenToUse": "When you have many distinct and unrelated operations to perform on objects in an object structure.",
+      "example": "```c\ntypedef struct Visitor Visitor;\ntypedef struct Element { void (*accept)(struct Element*, Visitor*); } Element;\n\nstruct Visitor {\n    void (*visit_element_a)(Visitor*, Element*);\n    void (*visit_element_b)(Visitor*, Element*);\n};\n\nvoid element_a_accept(Element* e, Visitor* v) { v->visit_element_a(v, e); }\n\nvoid print_visitor_visit_a(Visitor* v, Element* e) { printf(\"Visiting A\\n\"); }\n```"
+    },
+    "Dependency Injection": {
+      "description": "A technique whereby one object supplies the dependencies of another object. Dependencies are passed in (injected) rather than created internally.",
+      "whenToUse": "To decouple components, making them easier to test, maintain, and reuse. It's fundamental for building modular systems.",
+      "example": "```c\ntypedef struct { void (*log)(const char*); } Logger;\ntypedef struct { void (*save)(int); } Database;\n\ntypedef struct {\n    Logger* logger;\n    Database* db;\n} Service;\n\nService* create_service(Logger* l, Database* d) {\n    Service* s = malloc(sizeof(Service));\n    s->logger = l;\n    s->db = d;\n    return s;\n}\n\nvoid do_work(Service* s) {\n    s->logger->log(\"Working...\");\n    s->db->save(123);\n}\n```"
+    },
+    "Service Locator": {
+      "description": "A centralized registry for services. Components can look up and use services from the locator instead of being directly coupled to them.",
+      "whenToUse": "To decouple consumers from concrete service implementations, especially in large applications where DI would be cumbersome. Can be an anti-pattern if overused.",
+      "example": "```c\n#define LOGGER_SERVICE \"logger\"\n#define DB_SERVICE \"database\"\n\nvoid service_locator_init();\nvoid service_locator_register(const char* name, void* service);\nvoid* service_locator_get(const char* name);\n\n// Usage\nLogger* logger = service_locator_get(LOGGER_SERVICE);\nlogger->log(\"Hello\");\n```"
+    },
+    "Event Sourcing": {
+      "description": "Stores the full series of state-changing actions (events) rather than just the current state. The state can be reconstructed by replaying the events.",
+      "whenToUse": "When you need a complete audit log of all changes, or when you need to reconstruct past states. Useful in complex, high-concurrency domains.",
+      "example": "```c\nenum EventType { CREATED, UPDATED };\ntypedef struct { EventType type; void* payload; } Event;\n\n// A simple list of events\nEvent* event_log[1024];\nint event_count = 0;\n\nvoid append_event(EventType type, void* payload) {\n    Event* e = malloc(sizeof(Event));\n    e->type = type;\n    e->payload = payload; // Payload should be copied\n    event_log[event_count++] = e;\n}\n\n// To get current state, replay all events from the log.\n```"
+    },
+    "CQRS": {
+      "description": "Command Query Responsibility Segregation separates read and write operations into different models, using commands to update data and queries to read data.",
+      "whenToUse": "In complex domains where the read and write workloads are very different, allowing for separate optimization of each path.",
+      "example": "```c\n// Command: an intent to change state\ntypedef struct { int user_id; const char* new_name; } UpdateUserNameCmd;\n\n// Query: a request for data\ntypedef struct { int user_id; } GetUserQuery;\n\n// Command handler function\nvoid handle_update_user_name(UpdateUserNameCmd* cmd) {\n    // Logic to update the user name in the write database\n}\n\n// Query handler function\nchar* handle_get_user(GetUserQuery* query) {\n    // Logic to read user data from the read database\n    return \"User Data\";\n}\n```"
+    },
+    "Pub/Sub": {
+      "description": "A messaging pattern where senders (publishers) categorize messages into topics without knowledge of which receivers (subscribers) will get them. Subscribers express interest in one or more topics.",
+      "whenToUse": "For building scalable, decoupled systems. Useful for event-driven architectures, distributed systems, and microservices.",
+      "example": "```c\ntypedef void (*SubscriberCallback)(void* data);\n\nvoid publish(const char* topic, void* data);\nvoid subscribe(const char* topic, SubscriberCallback callback);\n\n// Implementation would involve a map from topic strings to lists of callbacks.\n```"
+    },
+    "Message Queue": {
+      "description": "A component for asynchronous communication between processes or threads. Messages are placed onto a queue and processed by a consumer at its own pace.",
+      "whenToUse": "To decouple heavyweight processing, to buffer or batch work, and to increase reliability and scalability of a system.",
+      "example": "```c\n#include <pthread.h>\n\ntypedef struct Message { void* data; struct Message* next; } Message;\ntypedef struct {\n    Message *head, *tail;\n    pthread_mutex_t mutex;\n    pthread_cond_t cond;\n} MessageQueue;\n\nvoid enqueue(MessageQueue* mq, void* data) {\n    Message* msg = malloc(sizeof(Message));\n    msg->data = data; msg->next = NULL;\n    pthread_mutex_lock(&mq->mutex);\n    if (mq->tail) mq->tail->next = msg; else mq->head = msg;\n    mq->tail = msg;\n    pthread_cond_signal(&mq->cond);\n    pthread_mutex_unlock(&mq->mutex);\n}\n\nvoid* dequeue(MessageQueue* mq) {\n    pthread_mutex_lock(&mq->mutex);\n    while (!mq->head) pthread_cond_wait(&mq->cond, &mq->mutex);\n    Message* msg = mq->head;\n    mq->head = msg->next;\n    if (!mq->head) mq->tail = NULL;\n    pthread_mutex_unlock(&mq->mutex);\n    void* data = msg->data;\n    free(msg);\n    return data;\n}\n```"
+    },
+    "Reactor": {
+      "description": "An event handling pattern that demultiplexes and dispatches service requests delivered concurrently to an application from one or more clients.",
+      "whenToUse": "For building efficient, single-threaded, concurrent servers that handle many I/O-bound clients, using event notification facilities like `select`, `poll`, or `epoll`.",
+      "example": "```c\n#include <sys/epoll.h>\n#define MAX_EVENTS 10\n\nvoid event_loop(int listen_sock) {\n    int epoll_fd = epoll_create1(0);\n    struct epoll_event ev, events[MAX_EVENTS];\n    ev.events = EPOLLIN;\n    ev.data.fd = listen_sock;\n    epoll_ctl(epoll_fd, EPOLL_CTL_ADD, listen_sock, &ev);\n\n    while (1) {\n        int nfds = epoll_wait(epoll_fd, events, MAX_EVENTS, -1);\n        for (int n = 0; n < nfds; ++n) {\n            if (events[n].data.fd == listen_sock) {\n                // accept new connection\n            } else {\n                // handle data on existing connection\n            }\n        }\n    }\n}\n```"
+    },
+    "Proactor": {
+      "description": "An asynchronous event handling pattern where long-running operations are initiated with a completion handler (callback). The OS notifies the application when the operation is complete.",
+      "whenToUse": "For highly concurrent applications where true asynchronous I/O is available (e.g., `io_uring` on Linux, IOCP on Windows), avoiding the need to block threads on I/O.",
+      "example": "```c\n// Simplified concept using POSIX AIO\n#include <aio.h>\n\nvoid aio_completion_handler(sigval_t sigval) {\n    struct aiocb* req = (struct aiocb*)sigval.sival_ptr;\n    if (aio_error(req) == 0) {\n        ssize_t bytes = aio_return(req);\n        printf(\"Read %zd bytes\\n\", bytes);\n    }\n    free(req->aio_buf);\n    free(req);\n}\n\nvoid start_async_read(int fd) {\n    struct aiocb* cb = calloc(1, sizeof(struct aiocb));\n    cb->aio_fildes = fd;\n    cb->aio_buf = malloc(1024);\n    cb->aio_nbytes = 1024;\n    cb->aio_sigevent.sigev_notify = SIGEV_THREAD;\n    cb->aio_sigevent.sigev_notify_function = aio_completion_handler;\n    cb->aio_sigevent.sigev_notify_attributes = NULL;\n    cb->aio_sigevent.sigev_value.sival_ptr = cb;\n    aio_read(cb);\n}\n```"
+    },
+    "Future/Promise": {
+      "description": "A placeholder for a value that is not yet known, usually because its computation is not complete. A promise is the writable side used to set the value, and a future is the read-only side.",
+      "whenToUse": "For managing results of asynchronous operations in a more composable way than raw callbacks. Not native to C, requires library implementation.",
+      "example": "```c\n// This requires a library. The concept is:\ntypedef struct Future Future;\ntypedef struct Promise Promise;\n\n// Create a promise-future pair\nvoid create_promise_future(Promise** p, Future** f);\n\n// Fulfill the promise in one thread\nvoid promise_set_value(Promise* p, void* value);\n\n// Get the value from the future in another thread (blocks until ready)\nvoid* future_get(Future* f);\n```"
+    },
+    "Async/Await": {
+      "description": "Syntactic sugar over futures/promises or callbacks to make asynchronous code look and behave more like synchronous code. Not available in C, but can be simulated with coroutine libraries.",
+      "whenToUse": "To simplify complex asynchronous workflows involving sequential steps, error handling, and loops. Requires a library in C (e.g., libdill, libcoro).",
+      "example": "```c\n// Simulation with a coroutine library (conceptual)\n#include <libdill.h>\n\ncoroutine void my_async_task(int sock) {\n    char buf[100];\n    // 'msleep' and 'frecv' would yield control without blocking the OS thread.\n    msleep(now() + 100); \n    ssize_t n = frecv(sock, buf, sizeof(buf), -1);\n    printf(\"Received %zd bytes\\n\", n);\n}\n```"
+    },
+    "Circuit Breaker": {
+      "description": "A pattern to prevent repeated calls to a service that is known to be failing, preventing cascading failures. It wraps a function call in an object that monitors for failures.",
+      "whenToUse": "When interacting with external services or resources that might fail or have high latency, to improve the stability and resilience of your application.",
+      "example": "```c\ntypedef enum { CLOSED, OPEN, HALF_OPEN } CbState;\ntypedef struct {\n    CbState state;\n    int failure_count;\n    time_t last_failure;\n} CircuitBreaker;\n\nbool circuit_breaker_execute(CircuitBreaker* cb, void (*func)()) {\n    if (cb->state == OPEN) {\n        if (time(NULL) - cb->last_failure > TIMEOUT) {\n            cb->state = HALF_OPEN;\n        } else {\n            return false; // Circuit is open\n        }\n    }\n    // Execute func, update state based on success/failure.\n    // On success: state=CLOSED, failure_count=0\n    // On failure: failure_count++, if threshold reached, state=OPEN\n    return true;\n}\n```"
+    },
+    "Throttling": {
+      "description": "Controls the rate at which an operation is performed. It ensures a function is not called more than once in a given time period.",
+      "whenToUse": "To limit the rate of API calls, event handling (e.g., UI updates), or any other resource-intensive operation.",
+      "example": "```c\ntypedef struct {\n    int max_per_window;\n    int window_secs;\n    int* request_timestamps;\n    int count;\n} Throttle;\n\nbool throttle_is_allowed(Throttle* t) {\n    time_t now = time(NULL);\n    // Prune old timestamps\n    // ...\n    if (t->count < t->max_per_window) {\n        // record new timestamp\n        return true;\n    }\n    return false;\n}\n```"
+    },
+    "Rate Limiter": {
+      "description": "Controls the rate of traffic sent or received. Often implemented using algorithms like Token Bucket or Leaky Bucket.",
+      "whenToUse": "To control resource usage and maintain quality of service by limiting the rate of requests a client can make.",
+      "example": "```c\n// Token Bucket algorithm\ntypedef struct {\n    double tokens;\n    double capacity;\n    double refill_rate; // tokens per second\n    time_t last_refill;\n} TokenBucket;\n\nbool token_bucket_consume(TokenBucket* tb, int tokens_needed) {\n    time_t now = time(NULL);\n    double elapsed = difftime(now, tb->last_refill);\n    tb->tokens += elapsed * tb->refill_rate;\n    if (tb->tokens > tb->capacity) tb->tokens = tb->capacity;\n    tb->last_refill = now;\n\n    if (tb->tokens >= tokens_needed) {\n        tb->tokens -= tokens_needed;\n        return true;\n    }\n    return false;\n}\n```"
+    },
+    "Retry": {
+      "description": "Automatically retries an operation that has failed, typically with a delay between attempts, to handle transient errors.",
+      "whenToUse": "When calling services that may experience temporary failures, such as network timeouts or temporary unavailability.",
+      "example": "```c\nbool perform_operation_with_retry(bool (*op)(), int max_retries, int delay_ms) {\n    for (int i = 0; i < max_retries; i++) {\n        if (op()) {\n            return true; // Success\n        }\n        if (i < max_retries - 1) {\n            usleep(delay_ms * 1000);\n        }\n    }\n    return false; // Failed after all retries\n}\n```"
+    },
+    "Backoff": {
+      "description": "An error handling strategy where the delay between retries is increased, often exponentially, to avoid overwhelming a failing system.",
+      "whenToUse": "In conjunction with the Retry pattern to prevent a 'thundering herd' problem where many clients retry simultaneously, further stressing a recovering service.",
+      "example": "```c\nbool perform_op_with_backoff(bool (*op)(), int max_retries, int base_delay_ms) {\n    int delay = base_delay_ms;\n    for (int i = 0; i < max_retries; i++) {\n        if (op()) return true;\n        if (i < max_retries - 1) {\n            usleep(delay * 1000);\n            delay *= 2; // Exponential backoff\n        }\n    }\n    return false;\n}\n```"
+    },
+    "Scheduler": {
+      "description": "Manages the execution of tasks at specified times or intervals. Can be implemented with a timer and a priority queue of tasks.",
+      "whenToUse": "For running background jobs, periodic maintenance tasks, or any time-based automation.",
+      "example": "```c\ntypedef struct Task { time_t exec_time; void (*func)(); } Task;\n\n// A simple scheduler would use a sorted list or heap of Tasks\n// and a timer loop that checks the next task's execution time.\nvoid scheduler_run() {\n    while (true) {\n        // Find next task to run\n        // Sleep until it's time to run it\n        // Execute task\n        // Reschedule if it's a recurring task\n    }\n}\n```"
+    },
+    "Worker Pool": {
+      "description": "A pool of worker threads that execute tasks from a shared queue. This controls the concurrency level and avoids the overhead of creating threads for each task.",
+      "whenToUse": "To process a large number of independent, concurrent tasks efficiently, such as handling web server requests or processing items in a batch job.",
+      "example": "```c\n#include <pthread.h>\n\nvoid* worker_thread_func(void* queue_ptr) {\n    MessageQueue* queue = (MessageQueue*)queue_ptr;\n    while (true) {\n        void* task_data = dequeue(queue);\n        // process task_data\n    }\n    return NULL;\n}\n\nvoid create_worker_pool(int num_workers, MessageQueue* queue) {\n    pthread_t threads[num_workers];\n    for (int i = 0; i < num_workers; i++) {\n        pthread_create(&threads[i], NULL, worker_thread_func, queue);\n    }\n}\n```"
+    },
+    "Observer (EventEmitter variant)": {
+      "description": "An observer pattern variant where events are identified by name (strings). Listeners subscribe to specific event names.",
+      "whenToUse": "For more flexible event systems where publishers can emit different kinds of events and subscribers can choose which ones to listen to.",
+      "example": "```c\ntypedef void (*Listener)(void* data);\n\n// Implementation requires a hash map from event name (char*) to a list of Listener functions.\nvoid on(const char* event_name, Listener listener);\nvoid emit(const char* event_name, void* data);\n```"
+    },
+    "Middleware": {
+      "description": "A chain of processing functions that handle a request and can pass it to the next function in the chain. Common in web servers.",
+      "whenToUse": "For creating pluggable and reusable cross-cutting concerns like logging, authentication, compression, and error handling for requests.",
+      "example": "```c\ntypedef struct Request { /* ... */ } Request;\ntypedef struct MiddlewareNode MiddlewareNode;\n\ntypedef void (*MiddlewareFunc)(Request* req, MiddlewareNode* next);\n\nstruct MiddlewareNode { MiddlewareFunc func; MiddlewareNode* next; };\n\nvoid run_middleware(MiddlewareNode* chain, Request* req) {\n    if (chain) {\n        chain->func(req, chain->next);\n    }\n}\n\nvoid logging_middleware(Request* req, MiddlewareNode* next) {\n    printf(\"Request received\\n\");\n    run_middleware(next, req);\n    printf(\"Request finished\\n\");\n}\n```"
+    },
+    "Null Object": {
+      "description": "Provides an object that acts as a default or neutral placeholder, avoiding the need for `NULL` checks. It conforms to the expected interface but does nothing.",
+      "whenToUse": "When you have an object that may or may not exist, and you want to avoid conditional checks for `NULL` in client code.",
+      "example": "```c\ntypedef struct { void (*log)(const char*); } Logger;\n\nvoid file_log(const char* msg) { /* write to file */ }\nvoid null_log(const char* msg) { /* do nothing */ }\n\nLogger* get_logger(bool enabled) {\n    static Logger file_logger = { file_log };\n    static Logger no_op_logger = { null_log };\n    return enabled ? &file_logger : &no_op_logger;\n}\n```"
+    },
+    "Lazy Initialization": {
+      "description": "The tactic of delaying the creation of an object, the calculation of a value, or some other expensive process until the first time it is needed.",
+      "whenToUse": "When the cost of creating a resource is high, and it may not be used at all during the program's execution.",
+      "example": "```c\nHeavyResource* get_heavy_resource() {\n    static HeavyResource* resource = NULL;\n    // Not thread-safe without a lock\n    if (resource == NULL) {\n        resource = create_heavy_resource(); // Expensive call\n    }\n    return resource;\n}\n```"
+    },
+    "Microkernel": {
+      "description": "An architectural pattern where a minimal core system provides essential services, and more complex functionality is implemented in separate, pluggable components or servers.",
+      "whenToUse": "For systems that require high flexibility, extensibility, and reliability. Common in operating systems and extensible applications (like IDEs).",
+      "example": "```c\ntypedef struct Kernel Kernel;\ntypedef struct Plugin {\n    void (*init)(Kernel*);\n    void (*execute)(const char* command);\n} Plugin;\n\nstruct Kernel {\n    // A list or map of registered plugins\n    void (*register_plugin)(Kernel*, const char* name, Plugin*);\n    Plugin* (*get_plugin)(Kernel*, const char* name);\n};\n```"
+    },
+    "Module": {
+      "description": "A software component that has a well-defined interface and hides its implementation. In C, this is achieved with header files (`.h`) for the public interface and source files (`.c`) for the private implementation.",
+      "whenToUse": "Fundamentally, for organizing any non-trivial C program to achieve encapsulation, reduce complexity, and improve reusability.",
+      "example": "```c\n// counter.h (Public Interface)\ntypedef struct Counter Counter;\nCounter* counter_create();\nvoid counter_increment(Counter*);\nint counter_get_value(Counter*);\nvoid counter_destroy(Counter*);\n\n// counter.c (Private Implementation)\nstruct Counter { int value; };\n// ...implementations of the functions in counter.h...\n```"
+    },
+    "Blackboard": {
+      "description": "An architectural pattern for solving complex problems where multiple, diverse knowledge sources collaborate by reading from and writing to a shared data store (the blackboard).",
+      "whenToUse": "For problems with no deterministic solution, where multiple specialized modules (knowledge sources) need to cooperate to find a solution, like in AI or signal processing.",
+      "example": "```c\n// The blackboard is a global, synchronized data structure.\ntypedef struct { pthread_mutex_t lock; /* ...shared data... */ } Blackboard;\n\n// Knowledge sources are independent threads or processes.\nvoid* knowledge_source_A_run(void* blackboard) {\n    while (true) {\n        // Read from blackboard, process, write back results.\n    }\n}\n\nvoid* knowledge_source_B_run(void* blackboard) { /* ... */ }\n```"
+    },
+    "Repository": {
+      "description": "Mediates between the domain and data mapping layers using a collection-like interface for accessing domain objects.",
+      "whenToUse": "To decouple the business logic from the details of data persistence (e.g., SQL database, file system), making the system more modular and testable.",
+      "example": "```c\ntypedef struct User { int id; char name[50]; } User;\n\ntypedef struct UserRepository {\n    User* (*find_by_id)(int id);\n    void (*save)(User* user);\n} UserRepository;\n\n// Implementation would connect to a database.\nUser* user_db_repo_find(int id) { /* SQL SELECT... */ return NULL; }\nvoid user_db_repo_save(User* u) { /* SQL INSERT/UPDATE... */ }\n\nUserRepository* create_db_user_repository() {\n    UserRepository* repo = malloc(sizeof(UserRepository));\n    repo->find_by_id = user_db_repo_find;\n    repo->save = user_db_repo_save;\n    return repo;\n}\n```"
+    },
+    "Unit of Work": {
+      "description": "Maintains a list of objects affected by a business transaction and coordinates the writing out of changes and the resolution of concurrency problems.",
+      "whenToUse": "To group multiple database operations (inserts, updates, deletes) into a single atomic transaction, ensuring data consistency.",
+      "example": "```c\ntypedef enum { UOW_NEW, UOW_DIRTY, UOW_REMOVED } UowState;\ntypedef struct { void* entity; UowState state; } UowEntry;\n\ntypedef struct {\n    UowEntry entries[100];\n    int count;\n} UnitOfWork;\n\nvoid uow_register_dirty(UnitOfWork* uow, void* entity) { /* ... */ }\n\nvoid uow_commit(UnitOfWork* uow) {\n    // begin transaction\n    // for each entry, perform the correct DB operation\n    // commit transaction or rollback on error\n}\n```"
+    },
+    "Specification": {
+      "description": "A pattern where a business rule can be encapsulated into a standalone, composable object.",
+      "whenToUse": "To represent complex, reusable business rules for validation, selection, or creation of objects, without cluttering the domain objects themselves.",
+      "example": "```c\ntypedef struct Order { double total; bool is_high_value; } Order;\n\ntypedef bool (*Specification)(Order* order);\n\nbool is_expensive_order(Order* o) { return o->total > 1000.0; }\nbool is_high_value_customer_order(Order* o) { return o->is_high_value; }\n\n// Composite specification\nbool is_priority_order(Order* o) {\n    return is_expensive_order(o) || is_high_value_customer_order(o);\n}\n```"
+    },
+    "Data Mapper": {
+      "description": "A layer of software that separates the in-memory objects from the database. Its responsibility is to transfer data between the two and also to isolate them from each other.",
+      "whenToUse": "When your domain model and database schema are substantially different and you want to keep them independent.",
+      "example": "```c\ntypedef struct { int user_id; char username[32]; } UserDomainObject;\ntypedef struct { int id; char user_name[32]; } UserDbRow;\n\nUserDomainObject* map_row_to_user(UserDbRow* row) {\n    UserDomainObject* user = malloc(sizeof(UserDomainObject));\n    user->user_id = row->id;\n    strcpy(user->username, row->user_name);\n    return user;\n}\n\nUserDbRow* map_user_to_row(UserDomainObject* user) {\n    // ... opposite mapping ...\n    return NULL;\n}\n```"
+    },
+    "Value Object": {
+      "description": "An immutable object whose equality is not based on identity, but rather on the values of its attributes.",
+      "whenToUse": "For objects that represent descriptive aspects of the domain, like amounts of money, dates, or colors, where you care about the value, not which specific instance you have.",
+      "example": "```c\ntypedef struct {\n    int amount_cents;\n    const char* currency; // e.g., \"USD\"\n} Money;\n\n// Operations on Money would always return a new Money struct.\nMoney money_add(Money m1, Money m2) {\n    // assert currencies are the same\n    Money result = { m1.amount_cents + m2.amount_cents, m1.currency };\n    return result;\n}\n\nbool money_equals(Money m1, Money m2) {\n    return m1.amount_cents == m2.amount_cents && strcmp(m1.currency, m2.currency) == 0;\n}\n```"
+    },
+    "Entity": {
+      "description": "An object that is not defined by its attributes, but rather by a thread of continuity and its identity.",
+      "whenToUse": "For domain objects that have a unique identity that persists over time and through state changes, such as a Customer, Product, or Order.",
+      "example": "```c\ntypedef struct {\n    int id; // The identity\n    char name[50];\n    char address[100];\n} Customer;\n\n// Two Customer structs are the same if their 'id' is the same,\n// even if their name or address differs.\nvoid update_customer_address(Customer* c, const char* new_address) {\n    strcpy(c->address, new_address);\n    // The customer is still the same entity.\n}\n```"
+    },
+    "Aggregate Root": {
+      "description": "A specific kind of entity that acts as the entry point to a cluster of associated objects (an aggregate). External objects can only hold references to the root.",
+      "whenToUse": "To define ownership and enforce consistency boundaries within your domain model. All operations on the aggregate must go through the root.",
+      "example": "```c\ntypedef struct OrderItem { /* ... */ } OrderItem;\n\ntypedef struct {\n    int id;\n    OrderItem* items;\n    int item_count;\n    // ... other order data\n} Order; // The Aggregate Root\n\n// All modifications to OrderItems must go through the Order.\nvoid order_add_item(Order* order, Product* product, int quantity) {\n    // Enforce business rules, e.g., max items, valid product.\n    // Then, add the new OrderItem to the order->items list.\n    // Recalculate order total.\n}\n```"
+    },
+    "Snapshot": {
+      "description": "A memento of an aggregate's state at a specific point in time, used as a performance optimization for event sourcing.",
+      "whenToUse": "In event-sourced systems where replaying the entire event stream for an aggregate becomes too slow. You can load the latest snapshot and then replay only the events that occurred after it.",
+      "example": "```c\ntypedef struct {\n    int version;\n    void* data; // A serialized copy of the aggregate's state\n    size_t data_size;\n} AggregateSnapshot;\n\nAggregateSnapshot* create_snapshot(void* aggregate_state, size_t size, int version) {\n    AggregateSnapshot* s = malloc(sizeof(AggregateSnapshot));\n    s->version = version;\n    s->data = malloc(size);\n    memcpy(s->data, aggregate_state, size);\n    s->data_size = size;\n    return s;\n}\n```"
+    },
+    "Factory Function": {
+      "description": "A simple function that is not part of a class, which creates and returns an object, abstracting away the `malloc` and initialization logic.",
+      "whenToUse": "For simple object creation where the full power of the Factory Method or Abstract Factory patterns is not necessary. It's a very common and basic C idiom.",
+      "example": "```c\ntypedef struct { int x, y; } Point;\n\nPoint* create_point(int x, int y) {\n    Point* p = (Point*)malloc(sizeof(Point));\n    if (p) {\n        p->x = x;\n        p->y = y;\n    }\n    return p;\n}\n```"
+    },
+    "HOC (Higher Order Component)": {
+      "description": "In C, this concept translates to higher-order functions: functions that take other functions as arguments or return them. This allows for creating new functions by composing or modifying existing ones.",
+      "whenToUse": "To create flexible and reusable code, such as creating specialized versions of a function or implementing generic algorithms like `qsort`.",
+      "example": "```c\ntypedef void (*FuncWithLogging)(int);\n\n// This is the higher-order function.\nFuncWithLogging with_logging(void (*func)(int), const char* log_msg) {\n    // C doesn't have closures, so state must be handled explicitly,\n    // often with static variables or by passing a context struct.\n    // This example is conceptual.\n    void new_func(int arg) {\n        printf(\"%s, arg=%d\\n\", log_msg, arg);\n        func(arg);\n    }\n    // In real C, returning a dynamically created function is complex.\n    // More common is to pass function pointers in.\n    return new_func; // This is not directly possible in standard C.\n}\n```"
+    },
+    "Render Props": {
+      "description": "A technique for sharing code between components using a prop whose value is a function. In C, this translates to passing a function pointer to a component to control part of its behavior.",
+      "whenToUse": "When a 'component' (e.g., a module that manages a UI element) needs to delegate part of its logic, especially rendering/processing logic, to its caller.",
+      "example": "```c\ntypedef struct {\n    int item_count;\n    int* items;\n    void (*render_item)(int item);\n} ListComponent;\n\nvoid render_list(ListComponent* list) {\n    for (int i = 0; i < list->item_count; i++) {\n        list->render_item(list->items[i]);\n    }\n}\n\n// Client defines how to render.\nvoid my_item_renderer(int item) {\n    printf(\"<item>%d</item>\\n\", item);\n}\n\n// Usage:\n// ListComponent list = { ..., .render_item = my_item_renderer };\n// render_list(&list);\n```"
+    },
+    "Hook (Functional Reactive)": {
+      "description": "Hooks are functions that let you 'hook into' state and lifecycle features from function components. This is a React-specific concept and does not directly map to C.",
+      "whenToUse": "This pattern is not applicable to C in its original form. The underlying principles of managing state and side effects can be implemented using structs and functions, but it wouldn't resemble the 'Hook' pattern.",
+      "example": "```c\n// Not applicable in C. A conceptual simulation:\ntypedef struct {\n    int state;\n} ComponentState;\n\n// 'useState' would be a function that returns a pointer to some global or context-specific state.\nint* useState(int initialValue) {\n    static int _state; // Naive implementation\n    _state = initialValue;\n    return &_state;\n}\n```"
+    },
+    "Pipeline": {
+      "description": "A chain of processing elements (processes or functions), arranged so that the output of each element is the input of the next. The Unix pipe is the classic example.",
+      "whenToUse": "For processing streams of data where each step in the processing is a distinct transformation. Highly effective for composing simple tools to perform complex tasks.",
+      "example": "```c\n// Functional pipeline in C\ntypedef void* (*Stage)(void* data);\n\nvoid* run_pipeline(void* input, Stage* stages, int stage_count) {\n    void* current_data = input;\n    for (int i = 0; i < stage_count; i++) {\n        current_data = stages[i](current_data);\n    }\n    return current_data;\n}\n\n// Shell pipeline\n// cat data.txt | grep 'error' | sort | uniq -c\n```"
+    },
+    "State Machine": {
+      "description": "A model of computation based on a finite number of states. Transitions between states are triggered by events. Often implemented in C using enums and switch statements.",
+      "whenToUse": "To model objects whose behavior changes based on a set of well-defined states, such as parsers, protocol handlers, or UI controllers.",
+      "example": "```c\ntypedef enum { IDLE, RUNNING, STOPPED } State;\n\nvoid handle_event(State* current_state, int event) {\n    switch (*current_state) {\n        case IDLE:\n            if (event == EVENT_START) *current_state = RUNNING;\n            break;\n        case RUNNING:\n            if (event == EVENT_STOP) *current_state = STOPPED;\n            break;\n        case STOPPED:\n            if (event == EVENT_RESET) *current_state = IDLE;\n            break;\n    }\n}\n```"
+    },
+    "Statechart": {
+      "description": "An extension of state machines that adds hierarchy (nested states), concurrency (orthogonal states), and history.",
+      "whenToUse": "For modeling very complex, reactive systems where a simple flat state machine becomes unwieldy. Useful for embedded systems and complex UIs.",
+      "example": "```c\n// This requires a more complex implementation, often involving\n// a stack of states to handle hierarchy.\n\ntypedef struct State { \n    struct State* parent;\n    void (*on_enter)();\n    void (*on_exit)();\n    void (*handle_event)(int event);\n};\n\n// State transitions would involve traversing up the hierarchy to find a handler,\n// and calling on_exit and on_enter functions along the path.\n```"
+    },
+    "Interpreter DSL": {
+      "description": "A small, specialized language designed for a specific task domain, along with an interpreter to execute it. The Interpreter pattern is one way to implement this.",
+      "whenToUse": "When you want to empower domain experts to write logic without learning a full programming language, or to create a more expressive way to solve a particular class of problems.",
+      "example": "```c\n// A simple graphics DSL\n// COMMANDS: \"PEN_DOWN\", \"FORWARD 10\", \"TURN 90\"\n\nvoid interpret_dsl(const char* script) {\n    // A simple parser would loop through the script lines.\n    char command[20];\n    int value;\n    sscanf(script, \"%s %d\", command, &value);\n\n    if (strcmp(command, \"FORWARD\") == 0) {\n        // move_turtle_forward(value);\n    } else if (strcmp(command, \"TURN\") == 0) {\n        // turn_turtle(value);\n    }\n}\n```"
+    }
+  }
+}

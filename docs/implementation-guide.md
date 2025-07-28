@@ -36,7 +36,7 @@ claude
 9. **doc-scribe** - Updates documentation
 10. **rollback-manager** - Handles error recovery
 
-### Language Support (25+ languages)
+### Language Support (33 languages)
 - **Systems**: C, C++, Rust, Assembly
 - **Enterprise**: Java, C#, Go
 - **Web**: TypeScript, JavaScript, Dart
@@ -74,7 +74,7 @@ claude
            │
     ┌──────▼──────────────┐
     │Interface Verifier    │
-    │(25+ languages)       │
+    │(33 languages)        │
     └──────┬──────────────┘
            │
     ┌──────▼──────────────┐

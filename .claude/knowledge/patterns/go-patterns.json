@@ -1,0 +1,75 @@
+{
+  "language": "go",
+  "patterns": {
+    "functional_options": {
+      "description": "Uses functions to configure structs with optional parameters.",
+      "whenToUse": "When you have constructors with many optional parameters or want to maintain backward compatibility.",
+      "example": "type Server struct {\n    host    string\n    port    int\n    timeout time.Duration\n}\n\ntype Option func(*Server)\n\nfunc WithTimeout(t time.Duration) Option {\n    return func(s *Server) {\n        s.timeout = t\n    }\n}\n\nfunc WithPort(p int) Option {\n    return func(s *Server) {\n        s.port = p\n    }\n}\n\nfunc NewServer(host string, opts ...Option) *Server {\n    s := &Server{\n        host:    host,\n        port:    8080,\n        timeout: 30 * time.Second,\n    }\n    for _, opt := range opts {\n        opt(s)\n    }\n    return s\n}\n\n// Usage: server := NewServer(\"localhost\", WithPort(9090), WithTimeout(60*time.Second))"
+    },
+    "error_wrapping": {
+      "description": "Wraps errors with additional context while preserving the original error.",
+      "whenToUse": "When you need to add context to errors as they bubble up through layers.",
+      "example": "func processFile(filename string) error {\n    file, err := os.Open(filename)\n    if err != nil {\n        return fmt.Errorf(\"failed to open file %s: %w\", filename, err)\n    }\n    defer file.Close()\n    \n    data, err := readData(file)\n    if err != nil {\n        return fmt.Errorf(\"failed to read data from %s: %w\", filename, err)\n    }\n    \n    return nil\n}\n\n// Caller can use errors.Is() or errors.As() to check wrapped errors\nif err := processFile(\"data.txt\"); err != nil {\n    if errors.Is(err, os.ErrNotExist) {\n        // Handle missing file\n    }\n}"
+    },
+    "singleton": {
+      "description": "Ensures a type has only one instance using sync.Once.",
+      "whenToUse": "When you need exactly one instance of a resource (database connection, logger, etc).",
+      "example": "type Database struct {\n    conn *sql.DB\n}\n\nvar (\n    instance *Database\n    once     sync.Once\n)\n\nfunc GetDatabase() *Database {\n    once.Do(func() {\n        conn, err := sql.Open(\"postgres\", \"...\")\n        if err != nil {\n            panic(err)\n        }\n        instance = &Database{conn: conn}\n    })\n    return instance\n}"
+    },
+    "worker_pool": {
+      "description": "Manages a pool of goroutines to process tasks concurrently.",
+      "whenToUse": "When you need to limit concurrent operations or process many tasks efficiently.",
+      "example": "type Task func()\n\ntype WorkerPool struct {\n    tasks chan Task\n    wg    sync.WaitGroup\n}\n\nfunc NewWorkerPool(workers int) *WorkerPool {\n    wp := &WorkerPool{\n        tasks: make(chan Task),\n    }\n    \n    for i := 0; i < workers; i++ {\n        go wp.worker()\n    }\n    \n    return wp\n}\n\nfunc (wp *WorkerPool) worker() {\n    for task := range wp.tasks {\n        task()\n        wp.wg.Done()\n    }\n}\n\nfunc (wp *WorkerPool) Submit(task Task) {\n    wp.wg.Add(1)\n    wp.tasks <- task\n}\n\nfunc (wp *WorkerPool) Shutdown() {\n    close(wp.tasks)\n    wp.wg.Wait()\n}"
+    },
+    "fan_out_fan_in": {
+      "description": "Distributes work among multiple goroutines and collects results.",
+      "whenToUse": "When you need to parallelize CPU-bound or I/O-bound work.",
+      "example": "func fanOut(in <-chan int, workers int) []<-chan int {\n    channels := make([]<-chan int, workers)\n    for i := 0; i < workers; i++ {\n        ch := make(chan int)\n        channels[i] = ch\n        go func() {\n            for n := range in {\n                ch <- process(n) // Do work\n            }\n            close(ch)\n        }()\n    }\n    return channels\n}\n\nfunc fanIn(channels ...<-chan int) <-chan int {\n    out := make(chan int)\n    var wg sync.WaitGroup\n    \n    for _, ch := range channels {\n        wg.Add(1)\n        go func(c <-chan int) {\n            for n := range c {\n                out <- n\n            }\n            wg.Done()\n        }(ch)\n    }\n    \n    go func() {\n        wg.Wait()\n        close(out)\n    }()\n    \n    return out\n}"
+    },
+    "pipeline": {
+      "description": "Chains together stages of data processing using channels.",
+      "whenToUse": "When you have sequential data transformations that can run concurrently.",
+      "example": "func generator(nums ...int) <-chan int {\n    out := make(chan int)\n    go func() {\n        for _, n := range nums {\n            out <- n\n        }\n        close(out)\n    }()\n    return out\n}\n\nfunc square(in <-chan int) <-chan int {\n    out := make(chan int)\n    go func() {\n        for n := range in {\n            out <- n * n\n        }\n        close(out)\n    }()\n    return out\n}\n\nfunc filter(in <-chan int, predicate func(int) bool) <-chan int {\n    out := make(chan int)\n    go func() {\n        for n := range in {\n            if predicate(n) {\n                out <- n\n            }\n        }\n        close(out)\n    }()\n    return out\n}\n\n// Usage: \n// numbers := generator(1, 2, 3, 4, 5)\n// squared := square(numbers)\n// evens := filter(squared, func(n int) bool { return n%2 == 0 })"
+    },
+    "semaphore": {
+      "description": "Limits the number of concurrent operations using a buffered channel.",
+      "whenToUse": "When you need to limit resource usage or API rate limiting.",
+      "example": "type Semaphore struct {\n    semaCh chan struct{}\n}\n\nfunc NewSemaphore(maxConcurrent int) *Semaphore {\n    return &Semaphore{\n        semaCh: make(chan struct{}, maxConcurrent),\n    }\n}\n\nfunc (s *Semaphore) Acquire() {\n    s.semaCh <- struct{}{}\n}\n\nfunc (s *Semaphore) Release() {\n    <-s.semaCh\n}\n\n// Usage with context\nfunc (s *Semaphore) AcquireCtx(ctx context.Context) error {\n    select {\n    case s.semaCh <- struct{}{}:\n        return nil\n    case <-ctx.Done():\n        return ctx.Err()\n    }\n}"
+    },
+    "observer": {
+      "description": "Implements publish-subscribe pattern for event notifications.",
+      "whenToUse": "When multiple parts of your system need to react to state changes.",
+      "example": "type Event struct {\n    Type string\n    Data interface{}\n}\n\ntype Observer interface {\n    OnNotify(Event)\n}\n\ntype Subject struct {\n    observers map[Observer]struct{}\n    mu        sync.RWMutex\n}\n\nfunc (s *Subject) Attach(o Observer) {\n    s.mu.Lock()\n    defer s.mu.Unlock()\n    s.observers[o] = struct{}{}\n}\n\nfunc (s *Subject) Notify(e Event) {\n    s.mu.RLock()\n    defer s.mu.RUnlock()\n    for o := range s.observers {\n        go o.OnNotify(e) // Async notification\n    }\n}"
+    },
+    "circuit_breaker": {
+      "description": "Prevents cascading failures by stopping requests to failing services.",
+      "whenToUse": "When calling external services that might fail or become slow.",
+      "example": "type CircuitBreaker struct {\n    failures     int\n    maxFailures  int\n    timeout      time.Duration\n    lastFailTime time.Time\n    mu           sync.Mutex\n}\n\ntype State int\n\nconst (\n    Closed State = iota\n    Open\n    HalfOpen\n)\n\nfunc (cb *CircuitBreaker) Call(fn func() error) error {\n    cb.mu.Lock()\n    defer cb.mu.Unlock()\n    \n    state := cb.currentState()\n    \n    if state == Open {\n        return errors.New(\"circuit breaker is open\")\n    }\n    \n    err := fn()\n    if err != nil {\n        cb.recordFailure()\n        return err\n    }\n    \n    cb.recordSuccess()\n    return nil\n}\n\nfunc (cb *CircuitBreaker) currentState() State {\n    if cb.failures >= cb.maxFailures {\n        if time.Since(cb.lastFailTime) > cb.timeout {\n            return HalfOpen\n        }\n        return Open\n    }\n    return Closed\n}"
+    },
+    "strategy": {
+      "description": "Defines a family of algorithms using interfaces.",
+      "whenToUse": "When you have multiple implementations of the same behavior.",
+      "example": "type PaymentStrategy interface {\n    Pay(amount float64) error\n}\n\ntype CreditCard struct {\n    number string\n    cvv    string\n}\n\nfunc (c *CreditCard) Pay(amount float64) error {\n    fmt.Printf(\"Paid $%.2f using credit card\\n\", amount)\n    return nil\n}\n\ntype PayPal struct {\n    email string\n}\n\nfunc (p *PayPal) Pay(amount float64) error {\n    fmt.Printf(\"Paid $%.2f using PayPal\\n\", amount)\n    return nil\n}\n\ntype PaymentProcessor struct {\n    strategy PaymentStrategy\n}\n\nfunc (p *PaymentProcessor) ProcessPayment(amount float64) error {\n    return p.strategy.Pay(amount)\n}"
+    },
+    "repository": {
+      "description": "Abstracts data access behind an interface.",
+      "whenToUse": "When you want to decouple business logic from data storage implementation.",
+      "example": "type User struct {\n    ID    string\n    Name  string\n    Email string\n}\n\ntype UserRepository interface {\n    GetByID(ctx context.Context, id string) (*User, error)\n    Save(ctx context.Context, user *User) error\n    Delete(ctx context.Context, id string) error\n}\n\ntype postgresUserRepo struct {\n    db *sql.DB\n}\n\nfunc (r *postgresUserRepo) GetByID(ctx context.Context, id string) (*User, error) {\n    var user User\n    err := r.db.QueryRowContext(ctx, \n        \"SELECT id, name, email FROM users WHERE id = $1\", id,\n    ).Scan(&user.ID, &user.Name, &user.Email)\n    if err != nil {\n        return nil, fmt.Errorf(\"failed to get user: %w\", err)\n    }\n    return &user, nil\n}"
+    },
+    "middleware": {
+      "description": "Wraps handlers to add cross-cutting concerns like logging, auth, etc.",
+      "whenToUse": "When you need to add common functionality to multiple handlers.",
+      "example": "type Middleware func(http.HandlerFunc) http.HandlerFunc\n\nfunc LoggingMiddleware(next http.HandlerFunc) http.HandlerFunc {\n    return func(w http.ResponseWriter, r *http.Request) {\n        start := time.Now()\n        next(w, r)\n        log.Printf(\"%s %s %v\", r.Method, r.URL.Path, time.Since(start))\n    }\n}\n\nfunc AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {\n    return func(w http.ResponseWriter, r *http.Request) {\n        token := r.Header.Get(\"Authorization\")\n        if !isValidToken(token) {\n            http.Error(w, \"Unauthorized\", http.StatusUnauthorized)\n            return\n        }\n        next(w, r)\n    }\n}\n\n// Chain middlewares\nfunc Chain(f http.HandlerFunc, middlewares ...Middleware) http.HandlerFunc {\n    for i := len(middlewares) - 1; i >= 0; i-- {\n        f = middlewares[i](f)\n    }\n    return f\n}"
+    },
+    "command": {
+      "description": "Encapsulates a request as an object with all necessary information.",
+      "whenToUse": "When you need to queue, log, or undo operations.",
+      "example": "type Command interface {\n    Execute() error\n    Undo() error\n}\n\ntype CreateUserCommand struct {\n    repo UserRepository\n    user *User\n}\n\nfunc (c *CreateUserCommand) Execute() error {\n    return c.repo.Save(context.Background(), c.user)\n}\n\nfunc (c *CreateUserCommand) Undo() error {\n    return c.repo.Delete(context.Background(), c.user.ID)\n}\n\ntype CommandInvoker struct {\n    history []Command\n}\n\nfunc (ci *CommandInvoker) Execute(cmd Command) error {\n    if err := cmd.Execute(); err != nil {\n        return err\n    }\n    ci.history = append(ci.history, cmd)\n    return nil\n}\n\nfunc (ci *CommandInvoker) UndoLast() error {\n    if len(ci.history) == 0 {\n        return errors.New(\"no commands to undo\")\n    }\n    cmd := ci.history[len(ci.history)-1]\n    ci.history = ci.history[:len(ci.history)-1]\n    return cmd.Undo()\n}"
+    },
+    "context_values": {
+      "description": "Passes request-scoped values through context.",
+      "whenToUse": "When you need to pass request-specific data through layers without changing signatures.",
+      "example": "type contextKey string\n\nconst (\n    userIDKey contextKey = \"userID\"\n    traceIDKey contextKey = \"traceID\"\n)\n\n// Store values in context\nfunc WithUserID(ctx context.Context, userID string) context.Context {\n    return context.WithValue(ctx, userIDKey, userID)\n}\n\n// Retrieve values from context\nfunc GetUserID(ctx context.Context) (string, bool) {\n    userID, ok := ctx.Value(userIDKey).(string)\n    return userID, ok\n}\n\n// Middleware to add context values\nfunc ContextMiddleware(next http.HandlerFunc) http.HandlerFunc {\n    return func(w http.ResponseWriter, r *http.Request) {\n        ctx := r.Context()\n        ctx = WithUserID(ctx, r.Header.Get(\"X-User-ID\"))\n        ctx = WithTraceID(ctx, generateTraceID())\n        next(w, r.WithContext(ctx))\n    }\n}"
+    }
+  }
+}

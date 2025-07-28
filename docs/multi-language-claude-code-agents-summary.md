@@ -2,7 +2,7 @@
 
 ## What We've Built
 
-Your Claude Code native sub-agent system now supports **25+ programming languages** for enterprise-grade parallel development:
+Your Claude Code native sub-agent system now supports **33 programming languages** for enterprise-grade parallel development:
 
 ### Core Languages with Full Support
 - **Systems**: C, C++, Rust, Zig, Assembly (x86_64, ARM)

@@ -150,11 +150,25 @@ end
 
 ## Workflow
 
-### Step 1: Read Phase Plan
+### Step 1: Read Phase Plan and Analyze Patterns
 
 ```javascript
 const phasePlan = JSON.parse(await Read({ path: '.claude/state/phase-plan.json' }));
 const components = phasePlan.components;
+
+// Consult pattern advisor for interface design patterns
+await Task({
+  description: "Analyze patterns for interfaces",
+  prompt: `Analyze the following components and suggest appropriate design patterns for their interfaces:
+  
+Components: ${JSON.stringify(components)}
+
+Focus on:
+- Interface segregation patterns
+- Dependency inversion patterns  
+- Language-specific idioms for clean interfaces`,
+  subagent_type: "pattern-advisor"
+});
 ```
 
 ### Step 2: Create Interface Structure
@@ -166,13 +180,19 @@ mkdir -p include  # For C/C++
 mkdir -p pkg/interfaces  # For Go
 ```
 
-### Step 3: Generate Interfaces
+### Step 3: Generate Interfaces with Pattern Awareness
 
 For each component, create:
-1. Interface definition in appropriate language
-2. Data types/structures
-3. Error types
-4. Constants/enums
+1. Interface definition using recommended patterns
+2. Data types/structures following language idioms
+3. Error types with proper error handling patterns
+4. Constants/enums with clear naming
+
+Apply patterns based on language:
+- **Go**: Use interface segregation, accept interfaces return structs
+- **Rust**: Use trait composition, newtype pattern for type safety
+- **TypeScript**: Use interface extension, discriminated unions
+- **Java**: Apply SOLID principles, use generics appropriately
 
 ### Step 4: Create Stubs
 

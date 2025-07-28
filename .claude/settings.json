@@ -59,11 +59,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "uv run .claude/hooks/pre_tool_use.py"
+            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/pre_tool_use.py"
           },
           {
             "type": "command",
-            "command": "uv run .claude/hooks/send_event.py --source-app claude-code-template --event-type PreToolUse --summarize"
+            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/send_event.py --source-app claude-code-template --event-type PreToolUse --summarize"
           }
         ]
       }
@@ -74,11 +74,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "uv run .claude/hooks/post_tool_use.py"
+            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/post_tool_use.py"
           },
           {
             "type": "command",
-            "command": "uv run .claude/hooks/send_event.py --source-app claude-code-template --event-type PostToolUse --summarize"
+            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/send_event.py --source-app claude-code-template --event-type PostToolUse --summarize"
           }
         ]
       }
@@ -89,11 +89,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "uv run .claude/hooks/notification.py --notify "
+            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/notification.py --notify "
           },
           {
             "type": "command",
-            "command": "uv run .claude/hooks/send_event.py --source-app claude-code-template --event-type Notification --summarize"
+            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/send_event.py --source-app claude-code-template --event-type Notification --summarize"
           }
         ]
       }
@@ -104,11 +104,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "uv run .claude/hooks/stop.py --chat"
+            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/stop.py --chat"
           },
           {
             "type": "command",
-            "command": "uv run .claude/hooks/send_event.py --source-app claude-code-template --event-type Stop --add-chat"
+            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/send_event.py --source-app claude-code-template --event-type Stop --add-chat"
           }
         ]
       }
@@ -119,11 +119,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "uv run .claude/hooks/subagent_stop.py"
+            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/subagent_stop.py"
           },
           {
             "type": "command",
-            "command": "uv run .claude/hooks/send_event.py --source-app claude-code-template --event-type SubagentStop"
+            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/send_event.py --source-app claude-code-template --event-type SubagentStop"
           }
         ]
       }
@@ -134,7 +134,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "uv run .claude/hooks/send_event.py --source-app claude-code-template --event-type PreCompact"
+            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/send_event.py --source-app claude-code-template --event-type PreCompact"
           }
         ]
       }
@@ -144,7 +144,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "uv run .claude/hooks/user_prompt_submit.py --log-only"
+            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/user_prompt_submit.py --log-only"
           },
           {
             "type": "command",

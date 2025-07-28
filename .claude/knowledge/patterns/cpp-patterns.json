@@ -1,0 +1,75 @@
+{
+  "language": "cpp",
+  "patterns": {
+    "singleton": {
+      "description": "Ensures a class has only one instance and provides a global point of access to it.",
+      "whenToUse": "When you need exactly one instance of a class (e.g., database connection pool, logger).",
+      "example": "class Singleton {\nprivate:\n    static Singleton* instance;\n    Singleton() {} // Private constructor\npublic:\n    static Singleton* getInstance() {\n        if (!instance) {\n            instance = new Singleton();\n        }\n        return instance;\n    }\n};"
+    },
+    "factory": {
+      "description": "Defines an interface for creating objects, but lets subclasses decide which class to instantiate.",
+      "whenToUse": "When you need to create objects without specifying their exact classes.",
+      "example": "class Product {\npublic:\n    virtual void use() = 0;\n};\n\nclass ConcreteProductA : public Product {\npublic:\n    void use() override { /* ... */ }\n};\n\nclass Factory {\npublic:\n    virtual std::unique_ptr<Product> createProduct() = 0;\n};\n\nclass ConcreteFactoryA : public Factory {\npublic:\n    std::unique_ptr<Product> createProduct() override {\n        return std::make_unique<ConcreteProductA>();\n    }\n};"
+    },
+    "observer": {
+      "description": "Defines a one-to-many dependency between objects so that when one object changes state, all its dependents are notified.",
+      "whenToUse": "When you need to notify multiple objects about state changes (e.g., MVC pattern, event systems).",
+      "example": "class Observer {\npublic:\n    virtual void update(int value) = 0;\n};\n\nclass Subject {\nprivate:\n    std::vector<Observer*> observers;\n    int state;\npublic:\n    void attach(Observer* o) { observers.push_back(o); }\n    void setState(int s) {\n        state = s;\n        notify();\n    }\n    void notify() {\n        for (auto* o : observers) {\n            o->update(state);\n        }\n    }\n};"
+    },
+    "strategy": {
+      "description": "Defines a family of algorithms, encapsulates each one, and makes them interchangeable.",
+      "whenToUse": "When you have multiple ways to perform a task and want to switch between them at runtime.",
+      "example": "class Strategy {\npublic:\n    virtual int execute(int a, int b) = 0;\n};\n\nclass AddStrategy : public Strategy {\npublic:\n    int execute(int a, int b) override { return a + b; }\n};\n\nclass Context {\nprivate:\n    std::unique_ptr<Strategy> strategy;\npublic:\n    void setStrategy(std::unique_ptr<Strategy> s) {\n        strategy = std::move(s);\n    }\n    int executeStrategy(int a, int b) {\n        return strategy->execute(a, b);\n    }\n};"
+    },
+    "decorator": {
+      "description": "Attaches additional responsibilities to an object dynamically.",
+      "whenToUse": "When you want to add functionality to objects without altering their structure.",
+      "example": "class Component {\npublic:\n    virtual std::string operation() = 0;\n};\n\nclass ConcreteComponent : public Component {\npublic:\n    std::string operation() override { return \"ConcreteComponent\"; }\n};\n\nclass Decorator : public Component {\nprotected:\n    std::unique_ptr<Component> component;\npublic:\n    Decorator(std::unique_ptr<Component> c) : component(std::move(c)) {}\n    std::string operation() override {\n        return component->operation();\n    }\n};\n\nclass ConcreteDecorator : public Decorator {\npublic:\n    using Decorator::Decorator;\n    std::string operation() override {\n        return \"ConcreteDecorator(\" + Decorator::operation() + \")\";\n    }\n};"
+    },
+    "raii": {
+      "description": "Resource Acquisition Is Initialization - ties resource lifetime to object lifetime.",
+      "whenToUse": "Always, for managing resources like memory, file handles, mutexes, etc.",
+      "example": "template<typename T>\nclass SmartPtr {\nprivate:\n    T* ptr;\npublic:\n    explicit SmartPtr(T* p = nullptr) : ptr(p) {}\n    ~SmartPtr() { delete ptr; }\n    SmartPtr(SmartPtr&& other) : ptr(other.ptr) { other.ptr = nullptr; }\n    SmartPtr& operator=(SmartPtr&& other) {\n        if (this != &other) {\n            delete ptr;\n            ptr = other.ptr;\n            other.ptr = nullptr;\n        }\n        return *this;\n    }\n    T& operator*() { return *ptr; }\n    T* operator->() { return ptr; }\n};"
+    },
+    "template_method": {
+      "description": "Defines the skeleton of an algorithm in a base class, letting subclasses override specific steps.",
+      "whenToUse": "When you have an algorithm with invariant parts and variant parts that subclasses can customize.",
+      "example": "class AbstractClass {\npublic:\n    void templateMethod() {\n        baseOperation1();\n        requiredOperation1();\n        baseOperation2();\n        hook();\n        requiredOperation2();\n    }\nprotected:\n    void baseOperation1() { std::cout << \"Base operation 1\\n\"; }\n    void baseOperation2() { std::cout << \"Base operation 2\\n\"; }\n    virtual void requiredOperation1() = 0;\n    virtual void requiredOperation2() = 0;\n    virtual void hook() {} // Optional\n};"
+    },
+    "iterator": {
+      "description": "Provides a way to access elements of an aggregate object sequentially without exposing its underlying representation.",
+      "whenToUse": "When you need to traverse a container without knowing its internal structure.",
+      "example": "template<typename T>\nclass Iterator {\npublic:\n    virtual bool hasNext() = 0;\n    virtual T next() = 0;\n};\n\ntemplate<typename T>\nclass Container {\npublic:\n    virtual std::unique_ptr<Iterator<T>> createIterator() = 0;\n};\n\n// STL-style iterator\nclass MyContainer {\npublic:\n    class iterator {\n        // iterator implementation\n    };\n    iterator begin() { return iterator(/* ... */); }\n    iterator end() { return iterator(/* ... */); }\n};"
+    },
+    "builder": {
+      "description": "Separates the construction of a complex object from its representation.",
+      "whenToUse": "When you need to create complex objects with many optional parameters.",
+      "example": "class Product {\npublic:\n    std::string partA, partB, partC;\n};\n\nclass Builder {\npublic:\n    virtual void buildPartA() = 0;\n    virtual void buildPartB() = 0;\n    virtual void buildPartC() = 0;\n    virtual std::unique_ptr<Product> getResult() = 0;\n};\n\nclass ConcreteBuilder : public Builder {\nprivate:\n    std::unique_ptr<Product> product;\npublic:\n    ConcreteBuilder() : product(std::make_unique<Product>()) {}\n    void buildPartA() override { product->partA = \"Part A\"; }\n    void buildPartB() override { product->partB = \"Part B\"; }\n    void buildPartC() override { product->partC = \"Part C\"; }\n    std::unique_ptr<Product> getResult() override {\n        return std::move(product);\n    }\n};"
+    },
+    "pimpl": {
+      "description": "Pointer to Implementation - hides implementation details in a separate class.",
+      "whenToUse": "To reduce compilation dependencies and hide implementation details.",
+      "example": "// In header file\nclass Widget {\npublic:\n    Widget();\n    ~Widget();\n    void doSomething();\nprivate:\n    class Impl;\n    std::unique_ptr<Impl> pImpl;\n};\n\n// In source file\nclass Widget::Impl {\npublic:\n    void doSomething() { /* actual implementation */ }\n};\n\nWidget::Widget() : pImpl(std::make_unique<Impl>()) {}\nWidget::~Widget() = default;\nvoid Widget::doSomething() { pImpl->doSomething(); }"
+    },
+    "crtp": {
+      "description": "Curiously Recurring Template Pattern - achieves static polymorphism.",
+      "whenToUse": "When you need compile-time polymorphism or want to avoid virtual function overhead.",
+      "example": "template<typename Derived>\nclass Base {\npublic:\n    void interface() {\n        static_cast<Derived*>(this)->implementation();\n    }\n    static void staticInterface() {\n        Derived::staticImplementation();\n    }\n};\n\nclass Derived : public Base<Derived> {\npublic:\n    void implementation() { /* ... */ }\n    static void staticImplementation() { /* ... */ }\n};"
+    },
+    "adapter": {
+      "description": "Allows incompatible interfaces to work together.",
+      "whenToUse": "When you need to use an existing class with an incompatible interface.",
+      "example": "class Target {\npublic:\n    virtual std::string request() = 0;\n};\n\nclass Adaptee {\npublic:\n    std::string specificRequest() { return \"Special request\"; }\n};\n\nclass Adapter : public Target {\nprivate:\n    std::unique_ptr<Adaptee> adaptee;\npublic:\n    Adapter() : adaptee(std::make_unique<Adaptee>()) {}\n    std::string request() override {\n        return \"Adapter: \" + adaptee->specificRequest();\n    }\n};"
+    },
+    "command": {
+      "description": "Encapsulates a request as an object, allowing you to parameterize clients with different requests.",
+      "whenToUse": "When you need to queue operations, support undo, or log operations.",
+      "example": "class Command {\npublic:\n    virtual void execute() = 0;\n    virtual void undo() = 0;\n};\n\nclass LightOnCommand : public Command {\nprivate:\n    Light* light;\npublic:\n    LightOnCommand(Light* l) : light(l) {}\n    void execute() override { light->on(); }\n    void undo() override { light->off(); }\n};\n\nclass RemoteControl {\nprivate:\n    std::vector<std::unique_ptr<Command>> history;\npublic:\n    void executeCommand(std::unique_ptr<Command> cmd) {\n        cmd->execute();\n        history.push_back(std::move(cmd));\n    }\n    void undoLastCommand() {\n        if (!history.empty()) {\n            history.back()->undo();\n            history.pop_back();\n        }\n    }\n};"
+    },
+    "type_erasure": {
+      "description": "Hides the concrete type behind a uniform interface.",
+      "whenToUse": "When you need runtime polymorphism without inheritance or when working with templates.",
+      "example": "class Any {\nprivate:\n    struct Concept {\n        virtual ~Concept() = default;\n        virtual std::unique_ptr<Concept> clone() = 0;\n    };\n    \n    template<typename T>\n    struct Model : Concept {\n        T value;\n        Model(T v) : value(std::move(v)) {}\n        std::unique_ptr<Concept> clone() override {\n            return std::make_unique<Model<T>>(value);\n        }\n    };\n    \n    std::unique_ptr<Concept> ptr;\npublic:\n    template<typename T>\n    Any(T value) : ptr(std::make_unique<Model<T>>(std::move(value))) {}\n};"
+    }
+  }
+}

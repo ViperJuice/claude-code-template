@@ -1,9 +1,6 @@
-# phase-breakdown.md
-Place this file at: `.claude/commands/phase-breakdown.md`
-
 ---
 allowed-tools: Bash, Task, Read, Write, TodoWrite
-description: Execute a development phase using native Claude Code sub-agents for parallel implementation. Supports C/C++, Rust, Go, Python, Java, TypeScript, Dart, Assembly and 15+ other languages.
+description: Execute a development phase using native Claude Code sub-agents for parallel implementation. Supports 33 languages including C/C++, Rust, Go, Python, Java, TypeScript, and many more.
 argument-hint: [phase-name or phase-number]
 ---
 
@@ -70,10 +67,12 @@ The phase architect should:
 2. Detect project languages and assign languages to components
 3. Create a detailed execution plan with language specifications
 4. Design interfaces using the interface-designer sub agent
-5. Set up worktrees using the worktree-manager sub agent
-6. Launch parallel worktree-lead sub agents for implementation
-7. Ensure worktree-leads use language-specific test-builder and coder agents
-8. Coordinate integration using the integration-guardian sub agent
+5. Verify interfaces using the interface-verifier sub agent
+6. Set up worktrees using the worktree-manager sub agent
+7. Launch parallel worktree-lead sub agents for implementation
+8. Ensure worktree-leads use language-specific test-builder and coder agents
+9. Coordinate integration using the integration-guardian sub agent
+10. Update documentation using the doc-scribe sub agent
 
 The phase is: $ARGUMENTS
 Detected project languages: ${detectedLanguages.join(', ')}

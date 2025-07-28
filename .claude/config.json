@@ -157,6 +157,76 @@
       "buildCommand": "zig build",
       "lintCommand": "zig fmt --check",
       "coverageCommand": "zig test --test-cmd 'kcov'"
+    },
+    "ocaml": {
+      "extensions": [".ml", ".mli"],
+      "testCommand": "dune test",
+      "buildCommand": "dune build",
+      "lintCommand": "ocamlformat --check",
+      "coverageCommand": "dune test --instrument-with bisect_ppx"
+    },
+    "fsharp": {
+      "extensions": [".fs", ".fsi", ".fsx"],
+      "testCommand": "dotnet test",
+      "buildCommand": "dotnet build",
+      "lintCommand": "dotnet fantomas --check",
+      "coverageCommand": "dotnet test --collect:\"XPlat Code Coverage\""
+    },
+    "erlang": {
+      "extensions": [".erl", ".hrl"],
+      "testCommand": "rebar3 eunit",
+      "buildCommand": "rebar3 compile",
+      "lintCommand": "rebar3 dialyzer",
+      "coverageCommand": "rebar3 cover"
+    },
+    "clojure": {
+      "extensions": [".clj", ".cljs", ".cljc"],
+      "testCommand": "lein test",
+      "buildCommand": "lein compile",
+      "lintCommand": "lein kibit",
+      "coverageCommand": "lein cloverage"
+    },
+    "julia": {
+      "extensions": [".jl"],
+      "testCommand": "julia --project -e 'using Pkg; Pkg.test()'",
+      "buildCommand": "julia --project -e 'using Pkg; Pkg.build()'",
+      "lintCommand": "julia -e 'using JuliaFormatter; format(\".\")'",
+      "coverageCommand": "julia --project -e 'using Pkg; Pkg.test(coverage=true)'"
+    },
+    "matlab": {
+      "extensions": [".m"],
+      "testCommand": "matlab -batch 'runtests'",
+      "buildCommand": "matlab -batch 'build'",
+      "lintCommand": "mlint",
+      "coverageCommand": "matlab -batch 'runtests(\"CoverageReport\",true)'"
+    },
+    "r": {
+      "extensions": [".r", ".R"],
+      "testCommand": "Rscript -e 'devtools::test()'",
+      "buildCommand": "Rscript -e 'devtools::build()'",
+      "lintCommand": "Rscript -e 'lintr::lint_dir(\".\")'",
+      "coverageCommand": "Rscript -e 'covr::package_coverage()'"
+    },
+    "perl": {
+      "extensions": [".pl", ".pm"],
+      "testCommand": "prove -v t/",
+      "buildCommand": "perl Makefile.PL && make",
+      "lintCommand": "perlcritic",
+      "coverageCommand": "cover -test"
+    },
+    "objectivec": {
+      "extensions": [".m", ".mm", ".h"],
+      "testCommand": "xcodebuild test",
+      "buildCommand": "xcodebuild build",
+      "lintCommand": "oclint",
+      "coverageCommand": "xcodebuild test -enableCodeCoverage YES"
+    },
+    "wasm": {
+      "extensions": [".wat", ".wasm"],
+      "testCommand": "wasmtime test.wasm",
+      "buildCommand": "wat2wasm module.wat -o module.wasm",
+      "lintCommand": "wasm-validate module.wasm",
+      "coverageCommand": "echo 'No coverage for WebAssembly'"
     }
   },
   "worktrees": {

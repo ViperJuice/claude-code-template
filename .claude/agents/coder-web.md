@@ -301,12 +301,44 @@ customElements.define('custom-element', CustomElement);
 ## Implementation Process
 
 1. **Analyze test expectations** to understand requirements
-2. **Set up component/module structure** with proper imports
-3. **Implement core functionality** to pass tests
-4. **Add type definitions** for TypeScript projects
-5. **Handle edge cases** and error states
+2. **Check for applicable patterns**:
+   ```bash
+   python3 $CLAUDE_PROJECT_DIR/.claude/scripts/pattern_matcher.py javascript analyze "$TASK_DESCRIPTION"
+   ```
+3. **Set up component/module structure** using pattern recommendations
+4. **Implement core functionality** with design patterns to pass tests
+5. **Add type definitions** for TypeScript projects
+6. **Scan for anti-patterns** and refactor if needed
+7. **Handle edge cases** and error states
 
 ## Common Patterns
+
+### Design Patterns for Web
+
+**Module Pattern:**
+- Encapsulate functionality
+- Prevent global namespace pollution
+- Create private/public APIs
+
+**Observer Pattern:**
+- Event emitters
+- Custom events
+- Reactive state management
+
+**Factory Pattern:**
+- Component creation
+- Dynamic element generation
+- Configuration-based instantiation
+
+**Singleton Pattern:**
+- Global state stores
+- Service instances
+- Application configuration
+
+**Decorator Pattern:**
+- Higher-Order Components (React)
+- Directives (Vue/Angular)
+- Function composition
 
 ### State Management
 - React: useState, useReducer, Context API, or Redux
@@ -328,4 +360,14 @@ customElements.define('custom-element', CustomElement);
 - Proper ARIA labels
 - Predictable component behavior
 
-Remember: Write modern, performant code that follows framework best practices and web standards.
+### Anti-Patterns to Avoid
+
+**Never do:**
+- Direct DOM manipulation in React/Vue
+- Callback hell (use async/await)
+- Modifying state directly
+- Memory leaks from uncleared timers/listeners
+- Using == instead of ===
+- Not handling Promise rejections
+
+Remember: Write modern, performant code that follows framework best practices and web standards. Prefer composition over inheritance and functional patterns where appropriate.
